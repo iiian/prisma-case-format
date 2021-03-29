@@ -1,8 +1,12 @@
 {
   "name": "prisma-case-format",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Give your introspected schema.prisma sane casing conventions",
   "main": "./dist/cli.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iiian/prisma-case-format.git"
+  },
   "bin": {
     "prisma-case-format": "bin/cli.js"
   },
