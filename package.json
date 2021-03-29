@@ -1,0 +1,24 @@
+{
+  "name": "prisma-case-format",
+  "version": "1.0.0",
+  "description": "Give your introspected schema.prisma sane naming conventions",
+  "main": "./dist/cli.js",
+  "bin": {
+    "prisma-case-format": "./bin/cli.js"
+  },
+  "scripts": {
+    "build": "tsc; mkdir bin; cp ./dist/cli.js ./bin/cli.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^4.2.3"
+  },
+  "dependencies": {
+    "prisma": "^2.19.0",
+    "@prisma/sdk": "^2.19.0",
+    "@prisma/client": "^2.19.0",
+    "change-case": "^4.1.2",
+    "commander": "^7.2.0"
+  }
+}
