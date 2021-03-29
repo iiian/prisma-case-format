@@ -48,7 +48,7 @@ model house {
 ...
 model HouseRatings {
   id       Int    @id @default(autoincrement())
-  houseId  String
+  houseId  String @map("house_id")
   house    House  @relation(fields: [houseId], references: [id])
   ...
 
