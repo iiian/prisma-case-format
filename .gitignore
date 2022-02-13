@@ -1,2 +1,8 @@
 node_modules
 yarn-error.log
+bin
+.vscode
+coverage
+pnpm-lock.*
+package-lock.*
+schema.prisma

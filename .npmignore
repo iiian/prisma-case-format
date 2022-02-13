@@ -1,0 +1,9 @@
+test/
+coverage/
+.vscode/
+bin/**.js.map
+pnpm-lock.yaml
+schema.prisma
+src/
+tsconfig.json
+jest.config.js
