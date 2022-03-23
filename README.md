@@ -64,5 +64,3 @@ model House {
 }
 ...
 ```
-
-This project is not affiliated with the official Prisma team.
