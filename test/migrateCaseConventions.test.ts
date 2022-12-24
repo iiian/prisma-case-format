@@ -19,3 +19,31 @@ model Demo {
   expect(err).toBeFalsy();
   expect(result.includes('articleId Int @map("article_id")')).toBeTruthy();
 });
+
+test('it can map relations with cascading deletion rules & foreign_key names', () => {
+  const file_contents = `datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+  }
+  
+  generator client {
+    provider = "prisma-client-js"
+  }
+  
+  model projects {
+    id          Int           @id @default(autoincrement())
+    name        String?       @db.VarChar
+    jira_issues jira_issues[]
+  }
+  
+  model jira_issues {
+    id                  Int       @id @default(autoincrement())
+    jira_integration_id Int?
+    project_id          Int
+    projects            projects? @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "jira_issues_projects_fkey")
+  }
+  `;
+  const [result, err] = migrateCaseConventions(file_contents, pascalCase, camelCase);
+  expect(err).toBeFalsy();
+  expect(result.includes('@relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "jira_issues_projects_fkey")')).toBeTruthy();
+});
