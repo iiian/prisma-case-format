@@ -39,7 +39,7 @@ export function migrateCaseConventions(file_contents: string, tableCaseConventio
   function reshapeModels(lines: string[]): [string[]?, Error?] {
     const MODEL_DECLARATION_REGEX = /^\s*model\s+(?<model>\w+)\s*\{\s*/;
     const FIELD_DECLARATION_REGEX = /^(\s*)(?<field>\w+)(\s+)(?<type>[\w+]+)(?<complications>[\[\]\?]*)(\s+.*\s*)?/;
-    const RELATION_ANNOTATION_REGEX = /(@relation\("?\w*"?,?\s*fields: \[)(?<fields>.*)(\],\s*references: \[)(?<references>.*)(\]\))/;
+    const RELATION_ANNOTATION_REGEX = /(@relation\("?\w*"?,?\s*fields: \[)(?<fields>.*)(\],\s*references: \[)(?<references>.*)(\].*\))/;
     const TABLE_INDEX_REGEX = /\@\@index\((?<fields>\[[\w\s,]+\])/;
     const TABLE_UNIQUE_REGEX = /\@\@unique\((?<fields>\[[\w\s,]+\])/;
     const TABLE_ID_REGEX = /\@\@id\((?<fields>\[[\w\s,]+\])/;
