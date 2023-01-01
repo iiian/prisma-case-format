@@ -47,3 +47,29 @@ test('it can map relations with cascading deletion rules & foreign_key names', (
   expect(err).toBeFalsy();
   expect(result.includes('@relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "jira_issues_projects_fkey")')).toBeTruthy();
 });
+
+test('it can map enum column to enum definition', () => {
+  const file_contents = `datasource db {
+    provider = "mysql"
+    url      = env("DATABASE_URL")
+  }
+  
+  generator client {
+    provider = "prisma-client-js"
+  }
+  
+  model posts {
+    id          Int           @id @default(autoincrement())
+    content     String?       @db.VarChar
+    type        post_type
+  }
+
+  enum post_type {
+    Note
+    Question
+  }
+  `;
+  const [result, err] = migrateCaseConventions(file_contents, pascalCase, camelCase);
+  expect(err).toBeFalsy();
+  expect(result.includes('enum PostType {')).toBeTruthy();
+});
