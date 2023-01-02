@@ -1,8 +1,8 @@
-const { camelCase, pascalCase } = require('change-case');
-const { migrateCaseConventions } = require('../src/migrateCaseConventions');
+const { camelCase, pascalCase } = require('change-case')
+const { migrateCaseConventions } = require('../src/migrateCaseConventions')
 
 test('it can map model columns with under_scores to camelCase', () => {
-  const file_contents = `datasource db {
+	const file_contents = `datasource db {
   provider = "sqlite"
   url      = "file:database.db"
 }
@@ -14,14 +14,18 @@ generator client {
 
 model Demo {
   article_id Int
-}`;
-  const [result, err] = migrateCaseConventions(file_contents, pascalCase, camelCase);
-  expect(err).toBeFalsy();
-  expect(result.includes('articleId Int @map("article_id")')).toBeTruthy();
-});
+}`
+	const [result, err] = migrateCaseConventions(
+		file_contents,
+		pascalCase,
+		camelCase,
+	)
+	expect(err).toBeFalsy()
+	expect(result.includes('articleId Int @map("article_id")')).toBeTruthy()
+})
 
 test('it can map relations with cascading deletion rules & foreign_key names', () => {
-  const file_contents = `datasource db {
+	const file_contents = `datasource db {
     provider = "postgresql"
     url      = env("DATABASE_URL")
   }
@@ -42,8 +46,16 @@ test('it can map relations with cascading deletion rules & foreign_key names', (
     project_id          Int
     projects            projects? @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "jira_issues_projects_fkey")
   }
-  `;
-  const [result, err] = migrateCaseConventions(file_contents, pascalCase, camelCase);
-  expect(err).toBeFalsy();
-  expect(result.includes('@relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "jira_issues_projects_fkey")')).toBeTruthy();
-});
+  `
+	const [result, err] = migrateCaseConventions(
+		file_contents,
+		pascalCase,
+		camelCase,
+	)
+	expect(err).toBeFalsy()
+	expect(
+		result.includes(
+			'@relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "jira_issues_projects_fkey")',
+		),
+	).toBeTruthy()
+})

@@ -1,0 +1,154 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Explore {
+  id        Int              @id @default(autoincrement())
+  command   String           @db.LongText
+  seed      BigInt?
+  hash      String?          @db.VarChar(32)
+  result    String?          @db.VarChar(255)
+  imageType ExploreImageType @map("image_type")
+  version   Int?
+  uid       Int?
+  createdAt DateTime?        @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt DateTime?        @map("updated_at") @db.DateTime(0)
+
+  @@index([uid], map: "uid")
+  @@map("explore")
+}
+
+model Feeds {
+  id        Int            @id @default(autoincrement())
+  command   String         @db.LongText
+  seed      BigInt?
+  hash      String?        @db.VarChar(32)
+  result    String?        @db.VarChar(255)
+  imageType FeedsImageType @map("image_type")
+  version   Int?
+  uid       Int?
+  createdAt DateTime?      @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt DateTime?      @map("updated_at") @db.DateTime(0)
+
+  @@index([uid], map: "uid")
+  @@map("feeds")
+}
+
+model Renders {
+  id               Int           @id @default(autoincrement())
+  command          String        @db.LongText
+  status           RendersStatus @default(WAITING) @map("status")
+  progress         Int?          @default(0)
+  seed             BigInt?
+  hash             String?       @db.VarChar(32)
+  result           Json?
+  messageId        String?       @map("message_id") @db.VarChar(19)
+  uid              Int?
+  progressFrames   Json?         @map("progress_frames")
+  upscaleOptions   Json?         @map("upscale_options")
+  variationOptions Json?         @map("variation_options")
+  createdAt        DateTime?     @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt        DateTime?     @map("updated_at") @db.DateTime(0)
+  users            Users?        @relation(fields: [uid], references: [id], onDelete: Cascade, map: "renders_ibfk_1")
+  upscales         Upscales[]
+  variations       Variations[]
+
+  @@index([uid], map: "uid")
+  @@map("renders")
+}
+
+model Upscales {
+  id          Int             @id @default(autoincrement())
+  renderId    Int?            @map("render_id")
+  variationId Int?            @map("variation_id")
+  version     Int?
+  result      String?         @db.LongText
+  messageId   String?         @map("message_id") @db.VarChar(19)
+  uid         Int?
+  options     Json?
+  status      UpscalesStatus? @map("status")
+  createdAt   DateTime?       @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt   DateTime?       @map("updated_at") @db.DateTime(0)
+  renders     Renders?        @relation(fields: [renderId], references: [id], onDelete: Cascade, map: "upscales_ibfk_1")
+  users       Users?          @relation(fields: [uid], references: [id], onDelete: Cascade, map: "upscales_ibfk_2")
+  variations  Variations?     @relation(fields: [variationId], references: [id], onDelete: Cascade, map: "upscales_ibfk_3")
+
+  @@index([renderId], map: "render_id")
+  @@index([uid], map: "uid")
+  @@index([variationId], map: "variation_id")
+  @@map("upscales")
+}
+
+model Users {
+  id         Int          @id @default(autoincrement())
+  name       String?      @db.VarChar(255)
+  email      String?      @db.VarChar(255)
+  createdAt  DateTime?    @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt  DateTime?    @map("updated_at") @db.DateTime(0)
+  renders    Renders[]
+  upscales   Upscales[]
+  variations Variations[]
+
+  @@map("users")
+}
+
+model Variations {
+  id                Int              @id @default(autoincrement())
+  renderId          Int?             @map("render_id")
+  status            VariationsStatus @map("status")
+  version           Int?
+  hash              String?          @db.VarChar(32)
+  hashFromVariation String?          @map("hash_from_variation") @db.VarChar(32)
+  originalHash      String?          @map("original_hash") @db.VarChar(32)
+  fromVersion       Int?             @map("from_version")
+  result            Json?
+  messageId         String?          @map("message_id") @db.VarChar(19)
+  uid               Int?
+  upscaleOptions    Json?            @map("upscale_options")
+  variationOptions  Json?            @map("variation_options")
+  createdAt         DateTime?        @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt         DateTime?        @map("updated_at") @db.DateTime(0)
+  upscales          Upscales[]
+  renders           Renders?         @relation(fields: [renderId], references: [id], onDelete: Cascade, map: "variations_ibfk_1")
+  users             Users?           @relation(fields: [uid], references: [id], onDelete: Cascade, map: "variations_ibfk_2")
+
+  @@index([renderId], map: "render_id")
+  @@index([uid], map: "uid")
+  @@map("variations")
+}
+
+enum RendersStatus {
+  WAITING
+  RENDERING
+  DONE
+  FAILED
+}
+
+enum VariationsStatus {
+  RENDERING
+  DONE
+  FAILED
+}
+
+enum FeedsImageType {
+  RENDER
+  VARIATION
+  UPSCALE
+}
+
+enum ExploreImageType {
+  RENDER
+  VARIATION
+  UPSCALE
+}
+
+enum UpscalesStatus {
+  RENDERING
+  DONE
+  FAILED
+}
