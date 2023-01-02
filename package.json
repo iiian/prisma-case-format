@@ -14,7 +14,9 @@
 		"build": "tsc",
 		"test": "jest",
 		"lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-		"dev": "nodemon --exec 'ts-node src/cli.ts' --watch './src/**/*'"
+		"dev": "nodemon --exec 'ts-node src/cli.ts' --watch './src/**/*'",
+		"prepare": "npm run build",
+		"format": "prettier --write \"src/**/*.ts\""
 	},
 	"author": "",
 	"license": "ISC",
