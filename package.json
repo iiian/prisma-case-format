@@ -1,13 +1,13 @@
 {
-	"name": "prisma-case-format",
-	"version": "1.1.0",
+	"name": "@kaykyramos/prisma-case-format",
+	"version": "2.0.0",
 	"description": "Give your introspected schema.prisma sane casing conventions",
 	"main": "./bin/cli.js",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/iiian/prisma-case-format.git"
 	},
-    "files": [
+	"files": [
 		"bin"
 	],
 	"bin": {
@@ -20,7 +20,8 @@
 		"dev": "nodemon --exec 'ts-node src/cli.ts' --watch './src/**/*'",
 		"prepare": "npm run build",
 		"format": "prettier --write \"src/**/*.ts\"",
-        "typecheck": "tsc -p tsconfig.json --noEmit"
+		"typecheck": "tsc -p tsconfig.json --noEmit",
+		"release": "yarn build && yarn publish --access restricted"
 	},
 	"author": "",
 	"license": "ISC",
@@ -30,15 +31,15 @@
 		"@babel/preset-typescript": "^7.16.7",
 		"@types/jest": "^27.4.0",
 		"@types/node": "^17.0.17",
-		"babel-jest": "^27.5.1",
-		"nodemon": "^2.0.20",
-		"ts-node": "^10.5.0",
-		"typescript": "^4.2.3",
-        "@typescript-eslint/eslint-plugin": "^5.0.0",
+		"@typescript-eslint/eslint-plugin": "^5.0.0",
 		"@typescript-eslint/parser": "^5.0.0",
+		"babel-jest": "^27.5.1",
 		"eslint": "^8.0.1",
 		"eslint-config-prettier": "^8.3.0",
-		"eslint-plugin-prettier": "^4.0.0"
+		"eslint-plugin-prettier": "^4.0.0",
+		"nodemon": "^2.0.20",
+		"ts-node": "^10.5.0",
+		"typescript": "^4.2.3"
 	},
 	"dependencies": {
 		"@prisma/client": "^2.19.0",
