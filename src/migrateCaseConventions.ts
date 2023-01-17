@@ -1,20 +1,41 @@
+import { camelCase, pascalCase } from 'change-case';
+import { plural } from 'pluralize';
+
 const MODEL_TOKEN = 'model';
 const ENUM_TOKEN = 'enum';
 
-export function migrateCaseConventions(file_contents: string, tableCaseConvention: CaseChange, fieldCaseConvention: CaseChange): [string?, Error?] {
+export type MigrateCaseConventionsOptions = {
+  tableCaseConvention: CaseChange,
+  fieldCaseConvention: CaseChange,
+  pluralize?: boolean;
+};
+
+const DEFAULTS: MigrateCaseConventionsOptions = {
+  tableCaseConvention: pascalCase,
+  fieldCaseConvention: camelCase,
+  pluralize: false,
+};
+
+export function migrateCaseConventions(file_contents: string, options: MigrateCaseConventionsOptions = DEFAULTS): [string?, Error?] {
+  const { tableCaseConvention, fieldCaseConvention, pluralize } = options;
+
   const lines = file_contents.split('\n');
 
-  const [reshape_model_error] = reshapeModelDefinitions(lines)
+  const [reshape_model_error] = reshapeModelDefinitions(lines);
   if (reshape_model_error) {
     return [, reshape_model_error];
   }
 
-  const [reshaped_enum_map, reshape_enum_error] = reshapeEnumDefinitions(lines)
+  const [reshaped_enum_map, reshape_enum_error] = reshapeEnumDefinitions(lines);
   if (reshape_enum_error) {
     return [, reshape_enum_error];
   }
 
-  const [reshape_model_field_error] = reshapeModelFields(lines, reshaped_enum_map!);
+  const reshape_model_options = {
+    reshaped_enum_map: reshaped_enum_map!,
+    pluralize: pluralize!
+  };
+  const [reshape_model_field_error] = reshapeModelFields(lines, reshape_model_options);
   if (reshape_model_field_error) {
     return [, reshape_model_field_error];
   }
@@ -23,7 +44,7 @@ export function migrateCaseConventions(file_contents: string, tableCaseConventio
 
   function reshapeModelDefinitions(lines: string[]): [Error?] {
     const MODEL_DECLARATION_REGEX = /^\s*model\s+(?<model>\w+)\s*\{\s*/;
-    
+
     const [model_bounds, model_bounds_error] = getDefinitionBounds(MODEL_TOKEN, lines);
     if (model_bounds_error) {
       return [model_bounds_error];
@@ -46,7 +67,7 @@ export function migrateCaseConventions(file_contents: string, tableCaseConventio
       }
     }
 
-    return []
+    return [];
   }
 
   function reshapeEnumDefinitions(lines: string[]): [Map<string, string>?, Error?] {
@@ -58,7 +79,7 @@ export function migrateCaseConventions(file_contents: string, tableCaseConventio
       return [, enum_bounds_error];
     }
 
-    for(const [start, _end] of enum_bounds!) {
+    for (const [start, _end] of enum_bounds!) {
       try {
         const enum_declaration_line = ENUM_DECLARATION_REGEX.exec(lines[start]);
         const enum_name = enum_declaration_line!.groups!['enum'];
@@ -73,12 +94,18 @@ export function migrateCaseConventions(file_contents: string, tableCaseConventio
       }
     }
 
-    return [reshaped_enum_map]
+    return [reshaped_enum_map];
   }
 
-  function reshapeModelFields(lines: string[], reshaped_enum_map: Map<string, string>): [Error?] {
-    const FIELD_DECLARATION_REGEX = /^(\s*)(?<field>\w+)(\s+)(?<type>[\w+]+)(?<complications>[\[\]\?]*)(\s+.*\s*)?/;
-    const RELATION_ANNOTATION_REGEX = /(@relation\("?\w*"?,?\s*fields: \[)(?<fields>.*)(\],\s*references: \[)(?<references>.*)(\].*\))/;
+  type ReshapeModelFieldsOptions = {
+    reshaped_enum_map: Map<string, string>;
+    pluralize: boolean;
+  };
+
+  function reshapeModelFields(lines: string[], options: ReshapeModelFieldsOptions): [Error?] {
+    const { reshaped_enum_map, pluralize } = options;
+    const FIELD_DECLARATION_REGEX = /^(\s*)(?<field>\w+)(\s+)(?<type>[\w+]+)(?<complications>[\[\]\?]*)(\s+.*\s*)?(?<comments>\/\/.*)?/;
+    const RELATION_ANNOTATION_REGEX = /(?<preamble>@relation\("?\w*"?,?\s*)((?<cue1>(fields|references):\s*\[)(?<ids1>\w+(,\s*\w+\s*)*))((?<cue2>\]\,\s*(fields|references):\s*\[)(?<ids2>\w+(,\s*\w+\s*)*))(?<trailer>\].*)/;
     const TABLE_INDEX_REGEX = /\@\@index\((?<fields>\[[\w\s,]+\])/;
     const TABLE_UNIQUE_REGEX = /\@\@unique\((?<fields>\[[\w\s,]+\])/;
     const TABLE_ID_REGEX = /\@\@id\((?<fields>\[[\w\s,]+\])/;
@@ -87,18 +114,21 @@ export function migrateCaseConventions(file_contents: string, tableCaseConventio
     if (model_bounds_error) {
       return [model_bounds_error];
     }
-    
+
     for (const [start, end] of model_bounds!) {
       for (let i = start; i < end; i++) {
         const field_declaration_line = FIELD_DECLARATION_REGEX.exec(lines[i]);
         if (field_declaration_line) {
-          let [search_term, chunk0, original_field_name, chunk2, field_type, chunk4, chunk5] = field_declaration_line;
-          const renamed_field_name = fieldCaseConvention(original_field_name);
+          let [search_term, chunk0, original_field_name, chunk2, field_type, is_array_or_nullable, chunk5] = field_declaration_line;
+          let renamed_field_name = fieldCaseConvention(original_field_name);
+          if (pluralize && is_array_or_nullable.startsWith('[]')) {
+            renamed_field_name = plural(renamed_field_name);
+          }
           let map_field_fragment = '';
 
           // Primitive field
           if (
-            renamed_field_name !== original_field_name && 
+            renamed_field_name !== original_field_name &&
             !lines[i].includes('@relation') &&
             isPrimitive(field_type)
           ) {
@@ -106,7 +136,7 @@ export function migrateCaseConventions(file_contents: string, tableCaseConventio
           }
 
           // Exception field
-          const enum_name = reshaped_enum_map.get(field_type)
+          const enum_name = reshaped_enum_map.get(field_type);
           if (enum_name) {
             // Enum field
             field_type = enum_name;
@@ -116,22 +146,23 @@ export function migrateCaseConventions(file_contents: string, tableCaseConventio
             field_type = tableCaseConvention(field_type);
           }
 
-          lines[i] = lines[i].replace(search_term, [chunk0, renamed_field_name, chunk2, field_type, chunk4, chunk5,].join(''));
-          lines[i] += map_field_fragment;
+          lines[i] = lines[i].replace(search_term, [chunk0, renamed_field_name, chunk2, field_type, is_array_or_nullable, map_field_fragment, chunk5,].join(''));
         }
 
         const relation_annotation_line = RELATION_ANNOTATION_REGEX.exec(lines[i]);
         if (relation_annotation_line) {
-          const [search_term, chunk0, fields, chunk2, references, chunk4] = relation_annotation_line!;
-          const updated_fields = fields
+          // , chunk0, fields, chunk2, references, chunk4
+          const [search_term] = relation_annotation_line!;
+          const { preamble, cue1, ids1, cue2, ids2, trailer } = relation_annotation_line!.groups!;
+          const updated_ids1 = ids1
             .split(/,\s*/)
             .map(fieldCaseConvention)
             .join(', ');
-          const updated_references = references
+          const updated_ids2 = ids2
             .split(/,\s*/)
             .map(fieldCaseConvention)
             .join(', ');
-          lines[i] = lines[i].replace(search_term, [chunk0, updated_fields, chunk2, updated_references, chunk4].join(''));
+          lines[i] = lines[i].replace(search_term, [preamble, cue1, updated_ids1, cue2, updated_ids2, trailer].join(''));
         }
 
         const table_unique_declaration_line = TABLE_UNIQUE_REGEX.exec(lines[i]);
@@ -157,7 +188,7 @@ export function migrateCaseConventions(file_contents: string, tableCaseConventio
       }
     }
 
-    return []
+    return [];
   }
 
   function getDefinitionBounds(token: string, lines: string[]): [[number, number][]?, Error?] {
