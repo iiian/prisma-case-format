@@ -17,7 +17,7 @@ program
   .option('--field-case <fieldCase>', 'case convention for field names. allowable values: "pascal", "camel", "snake"', 'camel')
   .option('-p, --pluralize', 'optionally pluralizes array type fields', false)
   .option('-D, --dry-run', 'print changes to console, rather than back to file', false)
-  .version(VERSION)
+  .version(VERSION, '', `hint: you have v${VERSION}`)
   ;
 program.parse(process.argv);
 

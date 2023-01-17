@@ -32,7 +32,7 @@ model house_rating {
 ...
 model house {
   id  String  @id @default(uuid())
-  house_ratings house_rating[]
+  house_rating house_rating[]
   ...
 }
 ...
@@ -46,21 +46,40 @@ model house {
 ```prisma
 // schema.prisma after
 ...
-model HouseRatings {
+model HouseRating {
   id       Int    @id @default(autoincrement())
   houseId  String @map("house_id")
   house    House  @relation(fields: [houseId], references: [id])
   ...
 
-  @@map("house_ratings")
+  @@map("house_rating")
 }
 ...
 model House {
   id           String        @id @default(uuid())
-  houseRatings HouseRating[]
+  houseRating HouseRating[]
   ...
 
   @@map("house")
+}
+...
+```
+
+Supply the `-p` or `--pluralize` argument to get array pluralizations.
+
+```bash
+❯ prisma-case-format -p
+✨ Done.
+```
+
+```prisma
+// schema.prisma after pluralization
+...
+model House {
+  ...
+  houseRatings HouseRating[]
+  ownerContacts String[] @map("owner_contact")
+  ...
 }
 ...
 ```
