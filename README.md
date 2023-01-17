@@ -14,7 +14,9 @@ Options:
   --file <file>             schema.prisma file location (default: "schema.prisma")
   --table-case <tableCase>  case convention for table names. allowable values: "pascal", "camel", "snake" (default: "pascal")
   --field-case <fieldCase>  case convention for field names. allowable values: "pascal", "camel", "snake" (default: "camel")
+  -p, --pluralize           optionally pluralizes array type fields (default: false)
   -D, --dry-run             print changes to console, rather than back to file (default: false)
+  -V, --version             hint: you have v1.2.0
   -h, --help                display help for command
 ```
 
