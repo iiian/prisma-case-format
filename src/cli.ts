@@ -3,20 +3,22 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { Command, OptionValues } from 'commander';
 import { snakeCase, camelCase, pascalCase } from 'change-case';
-import { formatSchema } from '@prisma/sdk';
-import { migrateCaseConventions, CaseChange } from './migrateCaseConventions';
+import { formatSchema } from '@prisma/internals';
+import { migrateCaseConventions, CaseChange, MigrateCaseConventionsOptions } from './migrateCaseConventions';
 
 const DEFAULT_FILE_LOCATION = 'schema.prisma';
-const program = new Command('prisma-case-format');
+const program = new Command(`prisma-case-format`);
 
+const VERSION = require('../package.json').version;
 program
   .description(`Give your schema.prisma sane naming conventions`)
   .requiredOption('--file <file>', 'schema.prisma file location', DEFAULT_FILE_LOCATION)
   .option('--table-case <tableCase>', 'case convention for table names. allowable values: "pascal", "camel", "snake"', 'pascal')
   .option('--field-case <fieldCase>', 'case convention for field names. allowable values: "pascal", "camel", "snake"', 'camel')
+  .option('-p, --pluralize', 'optionally pluralizes array type fields', false)
   .option('-D, --dry-run', 'print changes to console, rather than back to file', false)
-;
-``
+  .version(VERSION)
+  ;
 program.parse(process.argv);
 
 run();
@@ -35,6 +37,8 @@ async function run() {
     process.exit(1);
   }
 
+  let pluralize = !!options.pluralize;
+
   let [tableCaseConvention, error_table_case] = tryGetTableCaseConvention(options.tableCase);
   if (error_table_case) {
     console.warn(`Warning: encountered unsupported case convention: "${options.fieldCase}". Defaulting to "pascal" case.`);
@@ -47,7 +51,12 @@ async function run() {
     [fieldCaseConvention,] = tryGetTableCaseConvention('camel');
   }
 
-  const [schema, schema_error] = migrateCaseConventions(file_contents!, tableCaseConvention!, fieldCaseConvention!);
+  const convention_options: MigrateCaseConventionsOptions = {
+    tableCaseConvention: tableCaseConvention!,
+    fieldCaseConvention: fieldCaseConvention!,
+    pluralize,
+  };
+  const [schema, schema_error] = migrateCaseConventions(file_contents!, convention_options);
   if (schema_error) {
     console.error('Encountered error while migrating case conventions');
     console.error(schema_error);
@@ -62,21 +71,21 @@ async function run() {
     process.exit(0);
   }
   writeFileSync(options.file, Buffer.from(new_schema), { encoding: 'utf8' });
-  console.log('✨ Done.')
+  console.log('✨ Done.');
 }
 
 export function tryGetFileContents(options: OptionValues): [string?, Error?] {
   const file_path = options.file;
   try {
     const contents = String(readFileSync(file_path));
-    return [contents, ];
+    return [contents,];
   } catch (error) {
     return [, error as Error];
   }
 }
 
 export function tryGetTableCaseConvention(type: string): [CaseChange?, Error?] {
-  switch(type) {
+  switch (type) {
     case 'pascal': return [pascalCase,];
     case 'camel': return [camelCase,];
     case 'snake': return [snakeCase,];
