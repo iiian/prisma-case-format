@@ -7,14 +7,20 @@ const ENUM_TOKEN = 'enum';
 export type MigrateCaseConventionsOptions = {
   tableCaseConvention: CaseChange,
   fieldCaseConvention: CaseChange,
+  mapTableCaseConvention?: CaseChange,
+  mapFieldCaseConvention?: CaseChange,
   pluralize?: boolean;
 };
 
-const DEFAULTS: MigrateCaseConventionsOptions = {
+export const DEFAULTS: MigrateCaseConventionsOptions = {
   tableCaseConvention: pascalCase,
   fieldCaseConvention: camelCase,
   pluralize: false,
 };
+
+export function getMigrateConventionDefaults() {
+  return { ...DEFAULTS };
+}
 
 export function migrateCaseConventions(file_contents: string, options: MigrateCaseConventionsOptions = DEFAULTS): [string?, Error?] {
   const { tableCaseConvention, fieldCaseConvention, pluralize } = options;
