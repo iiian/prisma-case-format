@@ -4,17 +4,11 @@ As of `prisma@2.19.0`, `prisma introspect` will name its model 1:1 with your dat
 
 ## Use-case: as a one-time migration assistant
 
-Use `--dry-run` to figure out which case conventions are correct for your project. 
-Once things look correct, drop the flag to save changes to the `--file` (or your 
-local `schema.prisma` by default).
+Use `--dry-run` to figure out which case conventions are correct for your project. Once things look correct, drop the flag to save changes to the `--file` (or your local `schema.prisma` by default).
 
 ## Use-case: as a small CI/CD component 
 
-`prisma-case-format` is meant to be idempotent, so you can use it to confirm that 
-case conventions in your `schema.prisma` have not drifted. When applied on-commit 
-or on-push, it can behave as a CI/CD checklist item. You can use `--dry-run` to 
-diff changes with the original file, or cache the original file to the side, use 
-without `--dry-run`, and compare the two files.
+`prisma-case-format` now aims to be idempotent, so you can use it to confirm that case conventions in your `schema.prisma` have not accidentally drifted. `prisma-case-format` can be applied on-commit or on-push, either in a git commit-hook package or as a CI/CD step. Use `--dry-run` to diff changes with the original file, or backup the original and compare to the edit.
 
 ## Usage
 
