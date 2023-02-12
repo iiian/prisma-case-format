@@ -5,7 +5,7 @@ import { Command, OptionValues } from 'commander';
 import chalk from 'chalk';
 import { snakeCase, camelCase, pascalCase } from 'change-case';
 import { formatSchema } from '@prisma/internals';
-import { migrateCaseConventions, CaseChange, MigrateCaseConventionsOptions, getMigrateConventionDefaults } from './migrateCaseConventions';
+import { ConventionTransformer, CaseChange, MigrateCaseConventionsOptions, getMigrateConventionDefaults } from './convention-transformer';
 
 const DEFAULT_FILE_LOCATION = 'schema.prisma';
 const program = new Command(`prisma-case-format`);
@@ -91,7 +91,7 @@ async function run() {
 
   convention_options.pluralize = !!options.pluralize;
 
-  const [schema, schema_error] = migrateCaseConventions(file_contents!, convention_options);
+  const [schema, schema_error] = ConventionTransformer.migrateCaseConventions(file_contents!, convention_options);
   if (schema_error) {
     console.error(chalk.red('Encountered error while migrating case conventions'));
     console.error(chalk.red(schema_error));

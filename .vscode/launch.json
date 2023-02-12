@@ -8,8 +8,18 @@
       "name": "DoDryRun",
       "type": "node",
       "request": "launch",
-      "args": ["${workspaceFolder}/src/cli.ts", "--dry-run"],
-      "runtimeArgs": ["--nolazy", "-r", "ts-node/register"],
+      "args": [
+        "${workspaceFolder}/src/cli.ts",
+        "--map-table-case=snake",
+        "--map-field-case=snake",
+        "--pluralize",
+        "--dry-run"
+      ],
+      "runtimeArgs": [
+        "--nolazy",
+        "-r",
+        "ts-node/register"
+      ],
       "sourceMaps": true,
       "cwd": "${workspaceRoot}",
       "protocol": "inspector",
@@ -18,7 +28,11 @@
       "name": "Debug Jest Tests",
       "type": "node",
       "request": "launch",
-      "runtimeArgs": ["--inspect-brk", "${workspaceRoot}/node_modules/jest/bin/jest.js", "--runInBand"],
+      "runtimeArgs": [
+        "--inspect-brk",
+        "${workspaceRoot}/node_modules/jest/bin/jest.js",
+        "--runInBand"
+      ],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
     }
