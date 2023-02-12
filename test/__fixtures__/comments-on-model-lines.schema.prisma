@@ -1,0 +1,14 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator js_cli {
+  provider = "prisma-client-js"
+}
+
+model a_model {
+  id                  String  @id @default(uuid()) @db.Uuid
+  name                String  @unique
+  field_with_comments String? // This should not break our ability to insert map annotations
+}

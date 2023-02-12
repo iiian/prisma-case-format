@@ -1,0 +1,37 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Business {
+  id                 String               @id(map: "BusinessId") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  languageCode       String               @db.Char(2)
+  currencyCode       String               @db.Char(3)
+  createdAt          DateTime             @default(now()) @db.Timestamptz(0)
+  name               String               @db.VarChar(64)
+  language           String[]             @default([]) @db.Char(2)
+  phone              String               @db.VarChar(15)
+  address            String?              @db.VarChar(250)
+  billingName        String?              @db.VarChar(64)
+  billingAddress     String?              @db.VarChar(250)
+  taxOffice          String?              @db.VarChar(64)
+  taxId              String?              @db.VarChar(64)
+  defaultTaxRate     Decimal?             @db.Decimal(8, 6)
+  isActive           Boolean              @default(true)
+  batchOperation     BatchOperation[]
+  currency           Currency             @relation(fields: [currencyCode], references: [code], onUpdate: Restrict, map: "BusinessCurrency")
+  language           Language             @relation(fields: [languageCode], references: [code], onUpdate: Restrict, map: "BusinessLanguage")
+  ingredientCategory IngredientCategory[]
+  itemCategory       ItemCategory[]
+  optionCategory     OptionCategory[]
+  profile            Profile[]
+  recipe             Recipe[]
+  tab                Tab[]
+  targetGroup        TargetGroup[]
+
+  @@schema("public")
+}

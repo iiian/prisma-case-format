@@ -1,0 +1,14 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:database.db"
+}
+
+// generator
+generator client {
+  provider = "prisma-client-js"
+}
+
+model DemoIt {
+  id         Int    @id
+  data_field String
+}

@@ -1,20 +1,18 @@
-const { camelCase, pascalCase, snakeCase } = require('change-case');
-const { migrateCaseConventions } = require('../src/migrateCaseConventions');
+import { readFileSync } from 'fs';
+
+import { join } from 'path';
+
+import { camelCase, pascalCase, snakeCase } from 'change-case';
+import { migrateCaseConventions } from '../src/migrateCaseConventions';
+
+const PRISMA_SUFFIX = '.schema.prisma';
+const FIXTURES_DIR = join(process.cwd(), 'test', '__fixtures__');
+function getFixture(relative_path: string) {
+  return readFileSync(join(FIXTURES_DIR, relative_path + PRISMA_SUFFIX), 'utf-8');
+}
 
 test('it can map model columns with under_scores to camelCase', () => {
-  const file_contents = `datasource db {
-  provider = "sqlite"
-  url      = "file:database.db"
-}
-
-// generator
-generator client {
-  provider = "prisma-client-js"
-}
-
-model Demo {
-  article_id Int
-}`;
+  const file_contents = getFixture('model-columns-with-underscores');
 
   const opts = {
     tableCaseConvention: pascalCase,
@@ -23,41 +21,11 @@ model Demo {
   };
   const [result, err] = migrateCaseConventions(file_contents, opts);
   expect(err).toBeFalsy();
-  expect(result.includes('articleId Int @map("article_id")')).toBeTruthy();
+  expect(result?.includes('articleId Int @map("article_id")')).toBeTruthy();
 });
 
 test('it can map relations with cascading deletion rules & foreign_key names', () => {
-  const file_contents = `datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
-  }
-  
-  generator client {
-    provider = "prisma-client-js"
-  }
-  
-  model projects {
-    id          Int           @id @default(autoincrement())
-    name        String?       @db.VarChar
-    jira_issues jira_issues[]
-  }
-  
-  model jira_issues {
-    id                  Int       @id @default(autoincrement())
-    jira_integration_id Int?
-    project_id          Int
-    projects            projects? @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "jira_issues_projects_fkey")
-  }
-
-  model field_key {
-    key         String
-    type        String // str, num, bool
-    form_id     String @db.Uuid
-    form        Form   @relation(references: [id], fields: [form_id], onDelete: Cascade)
-  
-    @@id([key, form_id])
-  }
-  `;
+  const file_contents = getFixture('cascading-deletion-and-fk')
   const opts = {
     tableCaseConvention: pascalCase,
     fieldCaseConvention: camelCase,
@@ -65,31 +33,12 @@ test('it can map relations with cascading deletion rules & foreign_key names', (
   };
   const [result, err] = migrateCaseConventions(file_contents, opts);
   expect(err).toBeFalsy();
-  expect(result.includes('@relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "jira_issues_projects_fkey")')).toBeTruthy();
-  expect(result.includes('@relation(references: [id], fields: [formId], onDelete: Cascade)')).toBeTruthy();
+  expect(result?.includes('@relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "jira_issues_projects_fkey")')).toBeTruthy();
+  expect(result?.includes('@relation(references: [id], fields: [formId], onDelete: Cascade)')).toBeTruthy();
 });
 
 test('it can map enum column to enum definition', () => {
-  const file_contents = `datasource db {
-    provider = "mysql"
-    url      = env("DATABASE_URL")
-  }
-  
-  generator client {
-    provider = "prisma-client-js"
-  }
-  
-  model posts {
-    id        Int           @id @default(autoincrement())
-    content   String?       @db.VarChar
-    postType  post_type
-  }
-
-  enum post_type {
-    Note
-    Question
-  }
-  `;
+  const file_contents = getFixture('enum');
   const opts = {
     tableCaseConvention: pascalCase,
     fieldCaseConvention: snakeCase,
@@ -97,49 +46,12 @@ test('it can map enum column to enum definition', () => {
   };
   const [result, err] = migrateCaseConventions(file_contents, opts);
   expect(err).toBeFalsy();
-  expect(result.includes(`post_type  PostType @map("postType")`)).toBeTruthy();
-  expect(result.includes(`enum PostType {`)).toBeTruthy();
+  expect(result?.includes(`post_type PostType @map("postType")`)).toBeTruthy();
+  expect(result?.includes(`enum PostType {`)).toBeTruthy();
 });
 
 test('it can optionally pluralize fields', () => {
-  const file_contents = `datasource db {
-    provider = "sqlite"
-    url = env("DATABASE_URL")
-  }
-  
-  generator client {
-    provider = "prisma-client-js"
-  }
-
-  model Business {
-    id                 String               @id(map: "BusinessId") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-    languageCode       String               @db.Char(2)
-    currencyCode       String               @db.Char(3)
-    createdAt          DateTime             @default(now()) @db.Timestamptz(0)
-    name               String               @db.VarChar(64)
-    language           String[]             @default([]) @db.Char(2)
-    phone              String               @db.VarChar(15)
-    address            String?              @db.VarChar(250)
-    billingName        String?              @db.VarChar(64)
-    billingAddress     String?              @db.VarChar(250)
-    taxOffice          String?              @db.VarChar(64)
-    taxId              String?              @db.VarChar(64)
-    defaultTaxRate     Decimal?             @db.Decimal(8, 6)
-    isActive           Boolean              @default(true)
-    batchOperation     BatchOperation[]
-    currency           Currency             @relation(fields: [currencyCode], references: [code], onUpdate: Restrict, map: "BusinessCurrency")
-    language           Language             @relation(fields: [languageCode], references: [code], onUpdate: Restrict, map: "BusinessLanguage")
-    ingredientCategory IngredientCategory[]
-    itemCategory       ItemCategory[]
-    optionCategory     OptionCategory[]
-    profile            Profile[]
-    recipe             Recipe[]
-    tab                Tab[]
-    targetGroup        TargetGroup[]
-  
-    @@schema("public")
-  }
-  `;
+  const file_contents = getFixture('pluralize-fields');
   const opts = {
     tableCaseConvention: pascalCase,
     fieldCaseConvention: camelCase,
@@ -147,7 +59,7 @@ test('it can optionally pluralize fields', () => {
   };
   let [result, err] = migrateCaseConventions(file_contents, opts);
   expect(err).toBeFalsy();
-  expect(result.includes(`ingredientCategories IngredientCategory[]`)).toBeTruthy();
+  expect(result?.includes(`ingredientCategories IngredientCategory[]`)).toBeTruthy();
   expect(result).toMatch(/languages\s+String\[\].+(@map\("language"\))/);
 
   // prove is optional
@@ -159,24 +71,7 @@ test('it can optionally pluralize fields', () => {
 });
 
 test('it can account for comments on model lines', () => {
-  const file_contents = `
-  
-  datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
-  }
-  
-  generator js_cli {
-    provider = "prisma-client-js"
-  }
-
-  model a_model {
-    id             String     @id @default(uuid()) @db.Uuid
-    name           String     @unique
-    field_with_comments   String? // This should not break our ability to insert map annotations
-  }
-  
-  `;
+  const file_contents = getFixture('comments-on-model-lines');
 
   const opts = {
     tableCaseConvention: pascalCase,
@@ -186,4 +81,50 @@ test('it can account for comments on model lines', () => {
   const [result, err] = migrateCaseConventions(file_contents, opts);
   expect(err).toBeFalsy();
   expect(result).toMatch(/fieldWithComments\s+String\?\s+@map\("field_with_comments"\)\s+\/\/ This should not break our ability to insert map annotations/);
+});
+
+const supported_case_conventions: { caseConvention: Function }[] = [
+  { caseConvention: snakeCase }, { caseConvention: camelCase }, { caseConvention: pascalCase }];
+/**
+ * !!Warning!! Jest snapshots are _almost_ an anti-pattern. This is because if
+ * you rename the test case, and introduce a bug, the bug is now valid to Jest.
+ * This means you _must_ participate in orthodox red-green-refactor.
+ * 
+ * If you rename this test, don't do it while the build is broken.
+ */
+test.each(supported_case_conventions)('it can enforce a specified case convention on all fields of all tables ($caseConvention.name)', ({ caseConvention }) => {
+  const file_contents = getFixture('idempotency');
+
+  const opts = {
+    tableCaseConvention: pascalCase,
+    fieldCaseConvention: camelCase,
+    mapFieldCaseConvention: caseConvention,
+    pluralize: false
+  };
+
+  const [result, err] = migrateCaseConventions(file_contents, opts);
+  expect(err).toBeFalsy();
+  expect(result).toMatchSnapshot(caseConvention.name);
+});
+
+/**
+ * !!Warning!! Jest snapshots are _almost_ an anti-pattern. This is because if
+ * you rename the test case, and introduce a bug, the bug is now valid to Jest.
+ * This means you _must_ participate in orthodox red-green-refactor.
+ * 
+ * If you rename this test, don't do it while the build is broken.
+ */
+test.each(supported_case_conventions)('it can enforce a specified case convention on all table names ($caseConvention.name)', ({ caseConvention }) => {
+  const file_contents = getFixture('idempotency');
+
+  const opts = {
+    tableCaseConvention: pascalCase,
+    fieldCaseConvention: camelCase,
+    mapTableCaseConvention: caseConvention,
+    pluralize: false
+  };
+
+  const [result, err] = migrateCaseConventions(file_contents, opts);
+  expect(err).toBeFalsy();
+  expect(result).toMatchSnapshot(caseConvention.name);
 });

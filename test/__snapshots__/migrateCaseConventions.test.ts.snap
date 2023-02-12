@@ -1,0 +1,113 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`it can enforce a specified case convention on all fields of all tables (camelCase): camelCase 1`] = `
+"datasource db {
+  provider = \\"sqlite\\"
+  url      = \\"file:database.db\\"
+}
+
+// generator
+generator client {
+  provider = \\"prisma-client-js\\"
+}
+
+model Demo {
+  id         Int    @id
+  dataField String
+}
+"
+`;
+
+exports[`it can enforce a specified case convention on all fields of all tables (pascalCase): pascalCase 1`] = `
+"datasource db {
+  provider = \\"sqlite\\"
+  url      = \\"file:database.db\\"
+}
+
+// generator
+generator client {
+  provider = \\"prisma-client-js\\"
+}
+
+model DemoIt {
+  id         Int    @id
+  dataField String @map(\\"DataField\\")
+}
+"
+`;
+
+exports[`it can enforce a specified case convention on all fields of all tables (snakeCase): snakeCase 1`] = `
+"datasource db {
+  provider = \\"sqlite\\"
+  url      = \\"file:database.db\\"
+}
+
+// generator
+generator client {
+  provider = \\"prisma-client-js\\"
+}
+
+model DemoIt {
+  id         Int    @id
+  dataField String @map(\\"data_field\\")
+}
+"
+`;
+
+exports[`it can enforce a specified case convention on all table names (camelCase): camelCase 1`] = `
+"datasource db {
+  provider = \\"sqlite\\"
+  url      = \\"file:database.db\\"
+}
+
+// generator
+generator client {
+  provider = \\"prisma-client-js\\"
+}
+
+model DemoIt {
+  id         Int    @id
+  dataField String @map(\\"data_field\\")
+
+  @@("demoIt")
+}
+"
+`;
+
+exports[`it can enforce a specified case convention on all table names (pascalCase): pascalCase 1`] = `
+"datasource db {
+  provider = \\"sqlite\\"
+  url      = \\"file:database.db\\"
+}
+
+// generator
+generator client {
+  provider = \\"prisma-client-js\\"
+}
+
+model DemoIt {
+  id         Int    @id
+  dataField String @map(\\"data_field\\")
+}
+"
+`;
+
+exports[`it can enforce a specified case convention on all table names (snakeCase): snakeCase 1`] = `
+"datasource db {
+  provider = \\"sqlite\\"
+  url      = \\"file:database.db\\"
+}
+
+// generator
+generator client {
+  provider = \\"prisma-client-js\\"
+}
+
+model DemoIt {
+  id         Int    @id
+  dataField String @map(\\"data_field\\")
+
+  @@map("demo_it")
+}
+"
+`;
