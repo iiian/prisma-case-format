@@ -1,0 +1,19 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model posts {
+  id       Int       @id @default(autoincrement())
+  content  String?   @db.VarChar
+  postType post_type
+}
+
+enum post_type {
+  Note
+  Question
+}
