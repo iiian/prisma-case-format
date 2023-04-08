@@ -1,0 +1,37 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../node_modules/@generated/read"
+  previewFeatures = ["views"]
+}
+
+generator typegraphql {
+  provider = "typegraphql-prisma"
+}
+
+datasource db {
+  provider = "postgres"
+  url      = env("DB_URL")
+}
+
+model goose_db_version {
+  id         Int       @id @default(autoincrement())
+  version_id BigInt
+  is_applied Boolean
+  tstamp     DateTime? @default(now()) @db.Timestamp(6)
+}
+
+view accounts {
+  id         String    @unique @db.Uuid
+  created_at DateTime? @db.Timestamp(6)
+  name       String?
+  updated_at DateTime? @db.Timestamp(6)
+  owned_by   String?   @db.Uuid
+  users      user[]
+}
+
+model user {
+  id         String    @id
+  name       String
+  accounts   accounts? @relation(fields: [accounts_id], references: [id])
+  accounts_id String?  @db.Uuid
+}

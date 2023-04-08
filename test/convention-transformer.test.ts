@@ -153,3 +153,16 @@ test.each(supported_case_conventions)('it can enforce a specified case conventio
   expect(err).toBeFalsy();
   expect(new_schema).toMatchSnapshot(caseConvention.name);
 });
+
+test('it can enforce a specified case convention on views', async () => {
+  const opts = {
+    tableCaseConvention: pascalCase,
+    fieldCaseConvention: camelCase,
+    pluralize: true,
+  }
+  const file_contents = getFixture('views');
+  let [schema, err] = ConventionTransformer.migrateCaseConventions(file_contents, opts);
+  expect(err).toBeFalsy();
+  let new_schema = await formatSchema({ schema: schema! });
+  expect(new_schema).toMatchSnapshot();
+});

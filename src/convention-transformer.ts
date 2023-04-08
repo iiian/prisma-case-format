@@ -2,6 +2,7 @@ import { camelCase, pascalCase } from 'change-case';
 import { plural } from 'pluralize';
 
 const MODEL_TOKEN = 'model';
+const VIEW_TOKEN = 'view';
 const ENUM_TOKEN = 'enum';
 
 type ReshapeModelFieldsOptions = {
@@ -48,7 +49,7 @@ export function isPrimitive(field_type: string) {
   ].includes(field_type);
 }
 
-const MODEL_DECLARATION_REGEX = /^\s*model\s+(?<model>\w+)\s*\{\s*/;
+const MODEL_DECLARATION_REGEX = /^\s*(model|view)\s+(?<model>\w+)\s*\{\s*/;
 const MODEL_MAP_ANNOTATION_REGEX = /@@map\("(?<map>\w+)"\)/;
 const ENUM_DECLARATION_REGEX = /^\s*enum\s+(?<enum>\w+)\s*\{\s*/;
 const FIELD_DECLARATION_REGEX = /^(\s*)(?<field>\w+)(\s+)(?<type>[\w+]+)(?<is_array_or_nullable>[\[\]\?]*)(\s+.*\s*)?(?<comments>\/\/.*)?/;
@@ -109,7 +110,7 @@ export class ConventionTransformer {
 
   private static reshapeModelDefinitions(lines: string[], tableCaseConvention: CaseChange, mapTableCaseConvention?: CaseChange): [Error?] {
 
-    const [model_bounds, model_bounds_error] = ConventionTransformer.getDefinitionBounds(MODEL_TOKEN, lines);
+    const [model_bounds, model_bounds_error] = ConventionTransformer.getDefinitionBounds([MODEL_TOKEN, VIEW_TOKEN], lines);
     if (model_bounds_error) {
       return [model_bounds_error];
     }
@@ -163,7 +164,7 @@ export class ConventionTransformer {
   private static reshapeEnumDefinitions(lines: string[], tableCaseConvention: CaseChange): [Map<string, string>?, Error?] {
     const reshaped_enum_map = new Map<string, string>(); // Map<origin_enum_name, reshaped_enum_name>
 
-    const [enum_bounds, enum_bounds_error] = ConventionTransformer.getDefinitionBounds(ENUM_TOKEN, lines);
+    const [enum_bounds, enum_bounds_error] = ConventionTransformer.getDefinitionBounds([ENUM_TOKEN], lines);
     if (enum_bounds_error) {
       return [, enum_bounds_error];
     }
@@ -194,7 +195,7 @@ export class ConventionTransformer {
   private static reshapeModelFields(lines: string[], options: ReshapeModelFieldsOptions): [Error?] {
     const { reshaped_enum_map, pluralize, fieldCaseConvention, tableCaseConvention, mapFieldCaseConvention } = options;
 
-    const [model_bounds, model_bounds_error] = ConventionTransformer.getDefinitionBounds(MODEL_TOKEN, lines);
+    const [model_bounds, model_bounds_error] = ConventionTransformer.getDefinitionBounds([MODEL_TOKEN, VIEW_TOKEN], lines);
     if (model_bounds_error) {
       return [model_bounds_error];
     }
@@ -299,27 +300,29 @@ export class ConventionTransformer {
     return [];
   }
 
-  private static getDefinitionBounds(token: string, lines: string[]): [[number, number][]?, Error?] {
+  private static getDefinitionBounds(tokens: string[], lines: string[]): [[number, number][]?, Error?] {
     const END_DEFINITION_TOKEN = '}';
 
     const definition_bounds: [number, number][] = [];
     let within_definition = false;
     let boundary_cursor: [number, number] = [] as any;
-    for (const [index, line] of lines.entries()) {
-      if (!within_definition && line.trim().startsWith(token)) {
-        boundary_cursor.push(index);
-        within_definition = true;
-      } else if (within_definition && line.trim().endsWith(END_DEFINITION_TOKEN)) {
-        boundary_cursor.push(index);
-        definition_bounds.push(boundary_cursor);
-        boundary_cursor = [] as any;
-        within_definition = false;
+    for (const token of tokens) {
+      for (const [index, line] of lines.entries()) {
+        if (!within_definition && line.trim().startsWith(token)) {
+          boundary_cursor.push(index);
+          within_definition = true;
+        } else if (within_definition && line.trim().endsWith(END_DEFINITION_TOKEN)) {
+          boundary_cursor.push(index);
+          definition_bounds.push(boundary_cursor);
+          boundary_cursor = [] as any;
+          within_definition = false;
+        }
+      }
+      if (within_definition) {
+        return [, new Error(`${token} starting on line ${boundary_cursor[0]} did not end`)];
       }
     }
-    if (within_definition) {
-      return [, new Error(`${token} starting on line ${boundary_cursor[0]} did not end`)];
-    }
-    return [definition_bounds,];
+    return [definition_bounds.sort(([start_a], [start_b]) => start_a - start_b),];
   }
 
   private static transformDeclarationName(declaration_line: string, declaration_name: string, tableCaseConvention: CaseChange): string {
