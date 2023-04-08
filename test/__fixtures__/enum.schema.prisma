@@ -9,11 +9,17 @@ generator client {
 
 model posts {
   id       Int       @id @default(autoincrement())
-  content  String?   @db.VarChar
+  content  String?   @db.VarChar(245)
   postType post_type
 }
 
 enum post_type {
   Note
   Question
+}
+
+enum snaggle_flark {
+  foo
+  buz
+  bazz
 }
