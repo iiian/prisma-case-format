@@ -588,3 +588,85 @@ model Business {
 }
 "
 `;
+
+exports[`it can enforce a specified case convention on views 1`] = `
+"generator client {
+  provider        = \\"prisma-client-js\\"
+  output          = \\"../node_modules/@generated/read\\"
+  previewFeatures = [\\"views\\"]
+}
+
+generator typegraphql {
+  provider = \\"typegraphql-prisma\\"
+}
+
+datasource db {
+  provider = \\"postgres\\"
+  url      = env(\\"DB_URL\\")
+}
+
+model GooseDbVersion {
+  id        Int       @id @default(autoincrement())
+  versionId BigInt    @map(\\"version_id\\")
+  isApplied Boolean   @map(\\"is_applied\\")
+  tstamp    DateTime? @default(now()) @db.Timestamp(6)
+
+  @@map(\\"goose_db_version\\")
+}
+
+view Accounts {
+  id        String    @unique @db.Uuid
+  createdAt DateTime? @map(\\"created_at\\") @db.Timestamp(6)
+  name      String?
+  updatedAt DateTime? @map(\\"updated_at\\") @db.Timestamp(6)
+  ownedBy   String?   @map(\\"owned_by\\") @db.Uuid
+  users     User[]
+
+  @@map(\\"accounts\\")
+}
+
+model User {
+  id         String    @id
+  name       String
+  accounts   Accounts? @relation(fields: [accountsId], references: [id])
+  accountsId String?   @map(\\"accounts_id\\") @db.Uuid
+
+  @@map(\\"user\\")
+}
+"
+`;
+
+exports[`it can map enum column to enum definition 1`] = `
+"datasource db {
+  provider = \\"mysql\\"
+  url      = env(\\"DATABASE_URL\\")
+}
+
+generator client {
+  provider = \\"prisma-client-js\\"
+}
+
+model Posts {
+  id        Int      @id @default(autoincrement())
+  content   String?  @db.VarChar(245)
+  post_type PostType @map(\\"postType\\")
+
+  @@map(\\"posts\\")
+}
+
+enum PostType {
+  Note
+  Question
+
+  @@map(\\"post_type\\")
+}
+
+enum SnaggleFlark {
+  foo
+  buz
+  bazz
+
+  @@map(\\"snaggle_flark\\")
+}
+"
+`;

@@ -38,17 +38,17 @@ test('it can map relations with cascading deletion rules & foreign_key names', (
   expect(result?.includes('@relation(references: [id], fields: [formId], onDelete: Cascade)')).toBeTruthy();
 });
 
-test('it can map enum column to enum definition', () => {
-  const file_contents = getFixture('enum');
+test('it can map enum column to enum definition', async () => {
   const opts = {
     tableCaseConvention: pascalCase,
     fieldCaseConvention: snakeCase,
     pluralize: false
   };
-  const [result, err] = ConventionTransformer.migrateCaseConventions(file_contents, opts);
+  const file_contents = getFixture('enum');
+  const [schema, err] = ConventionTransformer.migrateCaseConventions(file_contents, opts);
   expect(err).toBeFalsy();
-  expect(result?.includes(`post_type PostType @map("postType")`)).toBeTruthy();
-  expect(result?.includes(`enum PostType {`)).toBeTruthy();
+  const new_schema = await formatSchema({ schema: schema! });
+  expect(new_schema).toMatchSnapshot();
 });
 
 test('it can optionally pluralize fields', () => {
@@ -152,4 +152,17 @@ test.each(supported_case_conventions)('it can enforce a specified case conventio
   new_schema = await formatSchema({ schema: schema! });
   expect(err).toBeFalsy();
   expect(new_schema).toMatchSnapshot(caseConvention.name);
+});
+
+test('it can enforce a specified case convention on views', async () => {
+  const opts = {
+    tableCaseConvention: pascalCase,
+    fieldCaseConvention: camelCase,
+    pluralize: true,
+  }
+  const file_contents = getFixture('views');
+  let [schema, err] = ConventionTransformer.migrateCaseConventions(file_contents, opts);
+  expect(err).toBeFalsy();
+  let new_schema = await formatSchema({ schema: schema! });
+  expect(new_schema).toMatchSnapshot();
 });
