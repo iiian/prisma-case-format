@@ -635,3 +635,38 @@ model User {
 }
 "
 `;
+
+exports[`it can map enum column to enum definition 1`] = `
+"datasource db {
+  provider = \\"mysql\\"
+  url      = env(\\"DATABASE_URL\\")
+}
+
+generator client {
+  provider = \\"prisma-client-js\\"
+}
+
+model Posts {
+  id        Int      @id @default(autoincrement())
+  content   String?  @db.VarChar(245)
+  post_type PostType @map(\\"postType\\")
+
+  @@map(\\"posts\\")
+}
+
+enum PostType {
+  Note
+  Question
+
+  @@map(\\"post_type\\")
+}
+
+enum SnaggleFlark {
+  foo
+  buz
+  bazz
+
+  @@map(\\"snaggle_flark\\")
+}
+"
+`;

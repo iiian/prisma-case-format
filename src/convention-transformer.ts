@@ -50,7 +50,7 @@ export function isPrimitive(field_type: string) {
 }
 
 const MODEL_DECLARATION_REGEX = /^\s*(model|view)\s+(?<model>\w+)\s*\{\s*/;
-const MODEL_MAP_ANNOTATION_REGEX = /@@map\("(?<map>\w+)"\)/;
+const ENTITY_MAP_ANNOTATION_REGEX = /@@map\("(?<map>\w+)"\)/;
 const ENUM_DECLARATION_REGEX = /^\s*enum\s+(?<enum>\w+)\s*\{\s*/;
 const FIELD_DECLARATION_REGEX = /^(\s*)(?<field>\w+)(\s+)(?<type>[\w+]+)(?<is_array_or_nullable>[\[\]\?]*)(\s+.*\s*)?(?<comments>\/\/.*)?/;
 const MAP_ANNOTATION_REGEX = /@map\("(?<map>\w+)"\)/;
@@ -100,7 +100,7 @@ export class ConventionTransformer {
   private static findExistingMapAnnotation(lines: string[]): [string | undefined, number] {
     for (let i = lines.length - 1; i >= 0; i--) {
       const line = lines[i];
-      const matches = line.match(MODEL_MAP_ANNOTATION_REGEX);
+      const matches = line.match(ENTITY_MAP_ANNOTATION_REGEX);
       if (!!matches) {
         return [matches.groups!['map'], i];
       }
@@ -161,7 +161,7 @@ export class ConventionTransformer {
     return [];
   }
 
-  private static reshapeEnumDefinitions(lines: string[], tableCaseConvention: CaseChange): [Map<string, string>?, Error?] {
+  private static reshapeEnumDefinitions(lines: string[], tableCaseConvention: CaseChange, mapTableCaseConvention?: CaseChange): [Map<string, string>?, Error?] {
     const reshaped_enum_map = new Map<string, string>(); // Map<origin_enum_name, reshaped_enum_name>
 
     const [enum_bounds, enum_bounds_error] = ConventionTransformer.getDefinitionBounds([ENUM_TOKEN], lines);
@@ -169,16 +169,29 @@ export class ConventionTransformer {
       return [, enum_bounds_error];
     }
 
-    for (const [start, _end] of enum_bounds!) {
+    let offset = 0;
+    for (const [base_start, base_end] of enum_bounds!) {
+      const start = base_start + offset;
+      const end = base_end + offset;
       try {
         const enum_declaration_line = ENUM_DECLARATION_REGEX.exec(lines[start]);
-        const enum_name = enum_declaration_line!.groups!['enum'];
-        const reshaped_enum_name = tableCaseConvention(enum_name);
-        if (reshaped_enum_name !== enum_name) {
-          lines[start] = ConventionTransformer.transformDeclarationName(lines[start], enum_name, tableCaseConvention);
+        const [existing_map_anno, map_anno_index] = ConventionTransformer.findExistingMapAnnotation(lines.slice(start, end));
+        const raw_enum_name = enum_declaration_line!.groups!['enum'];
+        const reshaped_enum_name = tableCaseConvention(raw_enum_name);
+        const store_name = mapTableCaseConvention?.(reshaped_enum_name) ?? existing_map_anno ?? raw_enum_name;
+        const mapping_annotation_line_number = start + map_anno_index;
+        if (reshaped_enum_name !== raw_enum_name) {
+          const map_model_line = `  @@map("${store_name}")`;
+          lines[start] = ConventionTransformer.transformDeclarationName(lines[start], raw_enum_name, tableCaseConvention);
+          if (0 <= map_anno_index) {
+            lines.splice(mapping_annotation_line_number, 1, map_model_line);
+          } else {
+            lines.splice(start + 1, 0, map_model_line);
+            offset += 1;
+          }
         }
 
-        reshaped_enum_map.set(enum_name, reshaped_enum_name);
+        reshaped_enum_map.set(raw_enum_name, reshaped_enum_name);
       } catch (error) {
         return [, error as Error];
       }
