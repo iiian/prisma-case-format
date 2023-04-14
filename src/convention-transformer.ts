@@ -321,7 +321,7 @@ export class ConventionTransformer {
     let boundary_cursor: [number, number] = [] as any;
     for (const token of tokens) {
       for (const [index, line] of lines.entries()) {
-        if (!within_definition && line.trim().startsWith(token)) {
+        if (!within_definition && line.startsWith(token)) {
           boundary_cursor.push(index);
           within_definition = true;
         } else if (within_definition && line.trim().endsWith(END_DEFINITION_TOKEN)) {
