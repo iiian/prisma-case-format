@@ -166,3 +166,16 @@ test('it can enforce a specified case convention on views', async () => {
   let new_schema = await formatSchema({ schema: schema! });
   expect(new_schema).toMatchSnapshot();
 });
+
+test('it can map columns with `view` in the name', () => {
+  const file_contents = getFixture('columns-with-view-in-name');
+
+  const opts = {
+    tableCaseConvention: pascalCase,
+    fieldCaseConvention: camelCase,
+    pluralize: false
+  };
+  const [result, err] = ConventionTransformer.migrateCaseConventions(file_contents, opts);
+  expect(err).toBeFalsy();
+  expect(result?.includes('viewCount Int @map("view_count")')).toBeTruthy();
+});
