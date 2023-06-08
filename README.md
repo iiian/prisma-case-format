@@ -8,7 +8,7 @@ Use `--dry-run` to figure out which case conventions are correct for your projec
 
 ## Use-case: as a small CI/CD component 
 
-`prisma-case-format` now aims to be idempotent, so you can use it to confirm that case conventions in your `schema.prisma` have not accidentally drifted. `prisma-case-format` can be applied on-commit or on-push, either in a git commit-hook package or as a CI/CD step. Use `--dry-run` to diff changes with the original file, or backup the original and compare to the edit.
+`prisma-case-format` aims to be idempotent, so you can use it to confirm that case conventions in your `schema.prisma` have not accidentally drifted. `prisma-case-format` can be applied on-commit or on-push, either in a git commit-hook package or as a CI/CD step. Use `--dry-run` to diff changes with the original file, or backup the original and compare to the edit.
 
 ## Usage
 
@@ -23,12 +23,14 @@ Options:
   -D, --dry-run                    print changes to console, rather than back to file (default: false)
   --table-case <tableCase>         case convention for table names (default: "pascal")
   --field-case <fieldCase>         case convention for field names (default: "camel")
-  --map-table-case <mapTableCase>  case convention for @@map() annotations
+  --map-table-case <mapTableCase>  case convention for @@map() annotations (SEE BOTTOM)
   --map-field-case <mapFieldCase>  case convention for @map() annotations
   -p, --pluralize                  optionally pluralize array type fields (default: false)
-  -V, --version                    hint: you have v1.3.0
+  -V, --version                    hint: you have v1.5.0
   -h, --help                       display help for command
-Supported case conventions: ["pascal", "camel", "snake"]
+Supported case conventions: ["pascal", "camel", "snake"].
+Additionally, append ',plural' after any case-convention selection to mark case convention as pluralized name in database.
+For instance, --map-table-case=snake,plural will append @@map("users") to model User.
 ```
 
 ## Example
