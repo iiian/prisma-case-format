@@ -636,6 +636,46 @@ model User {
 "
 `;
 
+exports[`it can map ...horrendous indexes that make your head hurt for these people 1`] = `
+"datasource db {
+  provider = \\"mysql\\"
+  url      = \\"file:database.db\\"
+}
+
+// generator
+generator client {
+  provider = \\"prisma-client-js\\"
+}
+
+model Post {
+  @@map(\\"post\\")
+  id      Int     @id @default(autoincrement())
+  titlePain   String @map(\\"title_pain\\")
+  contentHash String? @map(\\"content_hash\\")
+
+  @@index(fields: [titlePain, contentHash(length: 12)], name: \\"main_index\\")
+}
+
+model Address {
+  @@map(\\"address\\")
+  id     Int    @id
+  street String
+  number Int
+  user   User[]
+}
+
+model User {
+  @@map(\\"user\\")
+  id        Int     @id
+  email     String
+  address   Address @relation(fields: [addressId], references: [id])
+  addressId Int @map(\\"address_id\\")
+
+  @@index([addressId], map: \\"an_index_name\\")
+}
+"
+`;
+
 exports[`it can map enum column to enum definition 1`] = `
 "datasource db {
   provider = \\"mysql\\"
