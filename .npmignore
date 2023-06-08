@@ -4,6 +4,7 @@ coverage/
 bin/**.js.map
 pnpm-lock.yaml
 schema.prisma
+.schema.prisma
 src/
 tsconfig.json
 jest.config.js

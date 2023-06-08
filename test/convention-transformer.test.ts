@@ -6,6 +6,8 @@ import { camelCase, pascalCase, snakeCase } from 'change-case';
 import { CaseChange, ConventionTransformer } from '../src/convention-transformer';
 import { formatSchema } from '@prisma/internals';
 
+import { asPluralized } from '../src/caseConventions';
+
 const PRISMA_SUFFIX = '.schema.prisma';
 const FIXTURES_DIR = join(process.cwd(), 'test', '__fixtures__');
 function getFixture(relative_path: string) {
@@ -178,4 +180,19 @@ test('it can map columns with `view` in the name', () => {
   const [result, err] = ConventionTransformer.migrateCaseConventions(file_contents, opts);
   expect(err).toBeFalsy();
   expect(result?.includes('viewCount Int @map("view_count")')).toBeTruthy();
+});
+
+test('it can map tables while separating pluralization', () => {
+  const file_contents = getFixture('tables-with-pluralized-db-targets');
+
+  const opts = {
+    tableCaseConvention: pascalCase,
+    fieldCaseConvention: camelCase,
+    mapTableCaseConvention: asPluralized(snakeCase),
+    pluralize: false,
+  };
+  const [result, err] = ConventionTransformer.migrateCaseConventions(file_contents, opts);
+  expect(err).toBeFalsy();
+  expect(result?.includes('@@map("users")')).toBeTruthy();
+  expect(result?.includes('@@map("groups")')).toBeTruthy();
 });
