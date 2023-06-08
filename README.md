@@ -21,16 +21,24 @@ Give your schema.prisma sane naming conventions
 Options:
   --file <file>                    cwd-relative path to schema.prisma file (default: "schema.prisma")
   -D, --dry-run                    print changes to console, rather than back to file (default: false)
-  --table-case <tableCase>         case convention for table names (default: "pascal")
+  --table-case <tableCase>         case convention for table names (SEE BOTTOM) (default: "pascal")
   --field-case <fieldCase>         case convention for field names (default: "camel")
   --map-table-case <mapTableCase>  case convention for @@map() annotations (SEE BOTTOM)
   --map-field-case <mapFieldCase>  case convention for @map() annotations
   -p, --pluralize                  optionally pluralize array type fields (default: false)
-  -V, --version                    hint: you have v1.5.0
+  -V, --version                    hint: you have v1.6.0
   -h, --help                       display help for command
 Supported case conventions: ["pascal", "camel", "snake"].
-Additionally, append ',plural' after any case-convention selection to mark case convention as pluralized name in database.
-For instance, --map-table-case=snake,plural will append @@map("users") to model User.
+Additionally, append ',plural' after any case-convention selection to mark case convention as pluralized.
+For instance:
+  --map-table-case=snake,plural
+
+will append `@@map("users")` to `model User`.
+Append ',singular' after any case-convention selection to mark case convention as singularized.
+For instance, 
+  --map-table-case=snake,singular
+
+will append `@@map("user")` to `model Users`
 ```
 
 ## Example

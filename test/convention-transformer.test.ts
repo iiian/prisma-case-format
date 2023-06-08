@@ -6,7 +6,7 @@ import { camelCase, pascalCase, snakeCase } from 'change-case';
 import { CaseChange, ConventionTransformer } from '../src/convention-transformer';
 import { formatSchema } from '@prisma/internals';
 
-import { asPluralized } from '../src/caseConventions';
+import { asPluralized, asSingularized } from '../src/caseConventions';
 
 const PRISMA_SUFFIX = '.schema.prisma';
 const FIXTURES_DIR = join(process.cwd(), 'test', '__fixtures__');
@@ -195,4 +195,21 @@ test('it can map tables while separating pluralization', () => {
   expect(err).toBeFalsy();
   expect(result?.includes('@@map("users")')).toBeTruthy();
   expect(result?.includes('@@map("groups")')).toBeTruthy();
+});
+
+test('it can map tables while separating pluralization', () => {
+  const file_contents = getFixture('tables-with-pluralized-db-targets');
+
+  const opts = {
+    tableCaseConvention: pascalCase,
+    fieldCaseConvention: camelCase,
+    mapTableCaseConvention: asSingularized(snakeCase),
+    pluralize: false,
+  };
+  const [result, err] = ConventionTransformer.migrateCaseConventions(file_contents, opts);
+  expect(err).toBeFalsy();
+  expect(result?.includes('model Sisters')).toBeTruthy();
+  expect(result?.includes('@@map("sister")')).toBeTruthy();
+  expect(result?.includes('model Brothers')).toBeTruthy();
+  expect(result?.includes('@@map("brother")')).toBeTruthy();
 });

@@ -6,19 +6,29 @@ import chalk from 'chalk';
 import { snakeCase, camelCase, pascalCase } from 'change-case';
 import { formatSchema } from '@prisma/internals';
 import { ConventionTransformer, CaseChange, MigrateCaseConventionsOptions, getMigrateConventionDefaults } from './convention-transformer';
-import { asPluralized } from './caseConventions';
+import { asPluralized, asSingularized } from './caseConventions';
 
 const DEFAULT_FILE_LOCATION = 'schema.prisma';
 const program = new Command(`prisma-case-format`);
 
 const VERSION = require('../package.json').version;
-const SUPPORTED_CASE_CONVENTIONS_MESSAGE = `Supported case conventions: ["pascal", "camel", "snake"].\nAdditionally, append ',plural' after any case-convention selection to mark case convention as pluralized name in database.\nFor instance, --map-table-case=snake,plural will append @@map("users") to model User.`;
+const SUPPORTED_CASE_CONVENTIONS_MESSAGE = `Supported case conventions: ["pascal", "camel", "snake"].
+Additionally, append ',plural' after any case-convention selection to mark case convention as pluralized.
+For instance:
+  --map-table-case=snake,plural
+
+will append \`@@map("users")\` to \`model User\`.
+Append ',singular' after any case-convention selection to mark case convention as singularized.
+For instance, 
+  --map-table-case=snake,singular
+
+will append \`@@map("user")\` to \`model Users\``;
 program
   .description(`Give your schema.prisma sane naming conventions`)
   .addHelpText('after', SUPPORTED_CASE_CONVENTIONS_MESSAGE)
   .requiredOption('--file <file>', 'cwd-relative path to schema.prisma file', DEFAULT_FILE_LOCATION)
   .option('-D, --dry-run', 'print changes to console, rather than back to file', false)
-  .option('--table-case <tableCase>', 'case convention for table names', 'pascal')
+  .option('--table-case <tableCase>', 'case convention for table names (SEE BOTTOM)', 'pascal')
   .option('--field-case <fieldCase>', 'case convention for field names', 'camel')
   .option('--map-table-case <mapTableCase>', 'case convention for @@map() annotations (SEE BOTTOM)')
   .option('--map-field-case <mapFieldCase>', 'case convention for @map() annotations')
@@ -120,7 +130,7 @@ export function tryGetFileContents(options: OptionValues): [string?, Error?] {
 }
 
 export function tryGetTableCaseConvention(raw_type: string): [CaseChange?, Error?] {
-  const [type, is_plural] = raw_type.split(',');
+  const [type, case_flavor] = raw_type.split(',');
   let kase: CaseChange;
   switch (type) {
     case 'pascal': 
@@ -135,9 +145,15 @@ export function tryGetTableCaseConvention(raw_type: string): [CaseChange?, Error
     default: return [, new Error('unsupported case convention: ' + type)];
   }
 
-  if (is_plural === 'plural') {
+  switch (case_flavor) {
+    case 'plural':
     kase = asPluralized(kase);
+    break;
+    case 'singular':
+    kase = asSingularized(kase);
+    break;
   }
+
   return [kase,];
 }
 
