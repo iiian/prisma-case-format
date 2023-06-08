@@ -137,7 +137,7 @@ export class ConventionTransformer {
         const [existing_map_anno, map_anno_index] = ConventionTransformer.findExistingMapAnnotation(lines.slice(start, end));
         const raw_model_header = model_declaration_line!.groups!['model'];
         const model_name = tableCaseConvention(raw_model_header);
-        const store_name = mapTableCaseConvention?.(model_name) ?? existing_map_anno ?? raw_model_header;
+        const store_name = mapTableCaseConvention?.(raw_model_header) ?? existing_map_anno ?? raw_model_header;
         const mapping_annotation_line_number = start + map_anno_index;
         if (model_name == store_name && 0 <= map_anno_index) {
           lines.splice(mapping_annotation_line_number, 1);
@@ -178,7 +178,7 @@ export class ConventionTransformer {
         const [existing_map_anno, map_anno_index] = ConventionTransformer.findExistingMapAnnotation(lines.slice(start, end));
         const raw_enum_name = enum_declaration_line!.groups!['enum'];
         const reshaped_enum_name = tableCaseConvention(raw_enum_name);
-        const store_name = mapTableCaseConvention?.(reshaped_enum_name) ?? existing_map_anno ?? raw_enum_name;
+        const store_name = mapTableCaseConvention?.(raw_enum_name) ?? existing_map_anno ?? raw_enum_name;
         const mapping_annotation_line_number = start + map_anno_index;
         if (reshaped_enum_name !== raw_enum_name) {
           const map_model_line = `  @@map("${store_name}")`;

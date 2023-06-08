@@ -8,12 +8,27 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model User {
+model Users {
   id Int @id
   name String
+
+  @@map("users")
 }
 
 model Group {
   id Int @id
   name String
 }
+
+model Sisters {
+  id Int @id
+  name String
+
+  @@map("sisters")
+}
+
+model Brothers {
+  id Int @id
+  name String
+}
+
