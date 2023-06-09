@@ -1,0 +1,33 @@
+datasource db {
+  provider = "mysql"
+  url      = "file:database.db"
+}
+
+// generator
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Post {
+  id      Int     @id @default(autoincrement())
+  title_pain   String
+  content_hash String?
+
+  @@index(fields: [title_pain, content_hash(length: 12)], name: "main_index")
+}
+
+model Address {
+  id     Int    @id
+  street String
+  number Int
+  User   User[]
+}
+
+model User {
+  id        Int     @id
+  email     String
+  address   Address @relation(fields: [address_id], references: [id])
+  address_id Int
+
+  @@index([address_id], map: "an_index_name")
+}

@@ -55,7 +55,8 @@ const ENUM_DECLARATION_REGEX = /^\s*enum\s+(?<enum>\w+)\s*\{\s*/;
 const FIELD_DECLARATION_REGEX = /^(\s*)(?<field>\w+)(\s+)(?<type>[\w+]+)(?<is_array_or_nullable>[\[\]\?]*)(\s+.*\s*)?(?<comments>\/\/.*)?/;
 const MAP_ANNOTATION_REGEX = /@map\("(?<map>\w+)"\)/;
 const RELATION_ANNOTATION_REGEX = /(?<preamble>@relation\("?\w*"?,?\s*)((?<cue1>(fields|references):\s*\[)(?<ids1>\w+(,\s*\w+\s*)*))((?<cue2>\]\,\s*(fields|references):\s*\[)(?<ids2>\w+(,\s*\w+\s*)*))(?<trailer>\].*)/;
-const TABLE_INDEX_REGEX = /\@\@index\((?<fields>\[[\w\s,]+\])/;
+const EZ_TABLE_INDEX_REGEX = /\@\@index\((?<fields>\[[\w\s,]+\])/;
+const CPLX_TABLE_INDEX_REGEX = /\@\@index.*/;
 const TABLE_UNIQUE_REGEX = /\@\@unique\((?<fields>\[[\w\s,]+\])/;
 const TABLE_ID_REGEX = /\@\@id\((?<fields>\[[\w\s,]+\])/;
 
@@ -294,12 +295,26 @@ export class ConventionTransformer {
           lines[i] = lines[i].replace(field_names, updated_field_names);
         }
 
-        const table_index_declaration_line = TABLE_INDEX_REGEX.exec(lines[i]);
+        let table_index_declaration_line = EZ_TABLE_INDEX_REGEX.exec(lines[i]);
         if (table_index_declaration_line) {
           const field_names = table_index_declaration_line!.groups!['fields'];
           const updated_field_names = `[${field_names.split(/,\s*/).map(fieldCaseConvention).join(', ')}]`;
           lines[i] = lines[i].replace(field_names, updated_field_names);
+        } 
+        table_index_declaration_line =
+          table_index_declaration_line ? null : CPLX_TABLE_INDEX_REGEX.exec(lines[i]);
+        if (table_index_declaration_line) {
+          const field_names = [...new Set([
+            ...ConventionTransformer.getFieldNames(lines[i], ConventionTransformer.DEFAULT_START_POS),
+            ...ConventionTransformer.getFieldNames(lines[i], ConventionTransformer.FIELDS_START_POS),
+            ...ConventionTransformer.getFieldNames(lines[i], ConventionTransformer.REF_START_POS),
+          ])];
+          lines[i] = field_names.reduce(
+            (line, next) => line.replace(next, fieldCaseConvention(next)),
+            lines[i]
+          );
         }
+        
 
         const table_id_declaration_line = TABLE_ID_REGEX.exec(lines[i]);
         if (table_id_declaration_line) {
@@ -311,6 +326,43 @@ export class ConventionTransformer {
     }
 
     return [];
+  }
+
+  private static DEFAULT_START_POS = 'DEFAULT';
+  private static FIELDS_START_POS = 'fields';
+  private static REF_START_POS = 'references';
+
+  private static getFieldNames(haystack: string, start_position: string): string[] {
+    if (start_position === ConventionTransformer.DEFAULT_START_POS) {
+      let i = 0;
+      while (haystack[i++] !== '[');
+      let substr = '';
+      while (haystack[i] !== ']') {
+        substr += haystack[i++];
+      }
+      return ConventionTransformer.stripProperties(substr).split(/\s*,\s*/);
+    }
+    const regex = new RegExp(`${start_position}\\s*:\\s*\\[([^\\]]+)\\]`, 'g');
+    const matches = regex.exec(haystack);
+    
+    return matches ? (ConventionTransformer.stripProperties(matches[1]).split(/\s*[,]\s*/)) : [];
+  }
+
+  private static stripProperties(haystack: string): string {
+    let out_str = '';
+    let balance = 0;
+    for (let i = 0; i < haystack.length; i++) {
+      if (haystack[i] === '(') {
+        balance += 1;
+      }
+      if (balance === 0) {
+        out_str += haystack[i];
+      }
+      if (haystack[i] === ')') {
+        balance -= 1;
+      }
+    }
+    return out_str;
   }
 
   private static getDefinitionBounds(tokens: string[], lines: string[]): [[number, number][]?, Error?] {

@@ -213,3 +213,17 @@ test('it can map tables while separating pluralization', () => {
   expect(result?.includes('model Brothers')).toBeTruthy();
   expect(result?.includes('@@map("brother")')).toBeTruthy();
 });
+
+test('it can map ...horrendous indexes that make your head hurt for these people', () => {
+  const file_contents = getFixture('complex-index');
+
+  const opts = {
+    tableCaseConvention: pascalCase,
+    fieldCaseConvention: camelCase,
+    mapTableCaseConvention: asSingularized(snakeCase),
+    pluralize: false,
+  };
+  const [result, err] = ConventionTransformer.migrateCaseConventions(file_contents, opts);
+  expect(err).toBeFalsy();
+  expect(result).toMatchSnapshot();
+});
