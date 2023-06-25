@@ -26,7 +26,7 @@ Options:
   --map-table-case <mapTableCase>  case convention for @@map() annotations (SEE BOTTOM)
   --map-field-case <mapFieldCase>  case convention for @map() annotations
   -p, --pluralize                  optionally pluralize array type fields (default: false)
-  -V, --version                    hint: you have v1.6.0
+  -V, --version                    hint: you have v1.7.1
   -h, --help                       display help for command
 Supported case conventions: ["pascal", "camel", "snake"].
 Additionally, append ',plural' after any case-convention selection to mark case convention as pluralized.

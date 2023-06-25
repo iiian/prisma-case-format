@@ -35,6 +35,7 @@ export type CaseChange = (input: string) => string;
 
 export function isPrimitive(field_type: string) {
   field_type = field_type.replace('[]', '').replace('?', '').replace(/("\w+")/, '');
+  field_type = field_type.split('(')[0];
   return [
     'String',
     'Boolean',
@@ -52,7 +53,7 @@ export function isPrimitive(field_type: string) {
 const MODEL_DECLARATION_REGEX = /^\s*(model|view)\s+(?<model>\w+)\s*\{\s*/;
 const ENTITY_MAP_ANNOTATION_REGEX = /@@map\("(?<map>\w+)"\)/;
 const ENUM_DECLARATION_REGEX = /^\s*enum\s+(?<enum>\w+)\s*\{\s*/;
-const FIELD_DECLARATION_REGEX = /^(\s*)(?<field>\w+)(\s+)(?<type>[\w+]+)(?<is_array_or_nullable>[\[\]\?]*)(\s+.*\s*)?(?<comments>\/\/.*)?/;
+const FIELD_DECLARATION_REGEX = /^(\s*)(?<field>\w+)(\s+)(?<type>[\w+]+(\((?:[\w\s"'.]+(?:,\s*)?)*\))?)(?<is_array_or_nullable>[\[\]\?]*)(\s+.*\s*)?(?<comments>\/\/.*)?/;
 const MAP_ANNOTATION_REGEX = /@map\("(?<map>\w+)"\)/;
 const RELATION_ANNOTATION_REGEX = /(?<preamble>@relation\("?\w*"?,?\s*)((?<cue1>(fields|references):\s*\[)(?<ids1>\w+(,\s*\w+\s*)*))((?<cue2>\]\,\s*(fields|references):\s*\[)(?<ids2>\w+(,\s*\w+\s*)*))(?<trailer>\].*)/;
 const EZ_TABLE_INDEX_REGEX = /\@\@index\((?<fields>\[[\w\s,]+\])/;
@@ -232,7 +233,7 @@ export class ConventionTransformer {
         */
         const field_declaration_line = FIELD_DECLARATION_REGEX.exec(lines[i]);
         if (field_declaration_line) {
-          let [search_term, chunk0, field, chunk2, type, is_array_or_nullable, chunk5] = field_declaration_line;
+          let [search_term, chunk0, field, chunk2, type, _unused, is_array_or_nullable, chunk5] = field_declaration_line;
           const raw_map: string | undefined = MAP_ANNOTATION_REGEX.exec(chunk5)?.groups?.['map'];
           if (raw_map) {
             // delete it, we'll tee it up again in a moment

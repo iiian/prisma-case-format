@@ -606,10 +606,10 @@ datasource db {
 }
 
 model GooseDbVersion {
-  id        Int       @id @default(autoincrement())
-  versionId BigInt    @map(\\"version_id\\")
-  isApplied Boolean   @map(\\"is_applied\\")
-  tstamp    DateTime? @default(now()) @db.Timestamp(6)
+  id          Int                    @id @default(autoincrement())
+  versionId   BigInt                 @map(\\"version_id\\")
+  isApplied   Boolean                @map(\\"is_applied\\")
+  tstamp      DateTime?              @default(now()) @db.Timestamp(6)
   circleValue Unsupported(\\"circle\\")? @map(\\"circle_value\\")
 
   @@map(\\"goose_db_version\\")
