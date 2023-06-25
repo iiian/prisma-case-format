@@ -18,6 +18,7 @@ model goose_db_version {
   version_id BigInt
   is_applied Boolean
   tstamp     DateTime? @default(now()) @db.Timestamp(6)
+  circle_value Unsupported("circle")?
 }
 
 view accounts {
