@@ -51,10 +51,10 @@ export function isPrimitive(field_type: string) {
 }
 
 const MODEL_DECLARATION_REGEX = /^\s*(model|view)\s+(?<model>\w+)\s*\{\s*/;
-const ENTITY_MAP_ANNOTATION_REGEX = /@@map\("(?<map>\w+)"\)/;
+const ENTITY_MAP_ANNOTATION_REGEX = /@@map\("(?<map>.+)"\)/;
 const ENUM_DECLARATION_REGEX = /^\s*enum\s+(?<enum>\w+)\s*\{\s*/;
 const FIELD_DECLARATION_REGEX = /^(\s*)(?<field>\w+)(\s+)(?<type>[\w+]+(\((?:[\w\s"'.]+(?:,\s*)?)*\))?)(?<is_array_or_nullable>[\[\]\?]*)(\s+.*\s*)?(?<comments>\/\/.*)?/;
-const MAP_ANNOTATION_REGEX = /@map\("(?<map>\w+)"\)/;
+const MAP_ANNOTATION_REGEX = /@map\("(?<map>.+)"\)/;
 const RELATION_ANNOTATION_REGEX = /(?<preamble>@relation\("?\w*"?,?\s*)((?<cue1>(fields|references):\s*\[)(?<ids1>\w+(,\s*\w+\s*)*))((?<cue2>\]\,\s*(fields|references):\s*\[)(?<ids2>\w+(,\s*\w+\s*)*))(?<trailer>\].*)/;
 const EZ_TABLE_INDEX_REGEX = /\@\@index\((?<fields>\[[\w\s,]+\])/;
 const CPLX_TABLE_INDEX_REGEX = /\@\@index.*/;
