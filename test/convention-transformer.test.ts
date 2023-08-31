@@ -227,3 +227,18 @@ test('it can map ...horrendous indexes that make your head hurt for these people
   expect(err).toBeFalsy();
   expect(result).toMatchSnapshot();
 });
+
+test('it can rename enum in the database', async () => {
+  const file_contents = getFixture('enum-tables-map');
+
+  const opts = {
+    tableCaseConvention: pascalCase,
+    fieldCaseConvention: camelCase,
+    mapTableCaseConvention: snakeCase,
+    pluralize: false,
+  };
+  const [schema, err] = ConventionTransformer.migrateCaseConventions(file_contents, opts);
+  expect(err).toBeFalsy();
+  const result = await formatSchema({ schema: schema! });
+  expect(result).toMatchSnapshot();
+});
