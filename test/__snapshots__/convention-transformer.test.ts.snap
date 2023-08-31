@@ -711,3 +711,23 @@ enum SnaggleFlark {
 }
 "
 `;
+
+exports[`it can rename enum in the database 1`] = `
+"enum UserLocale {
+  fr_FR
+  en_EN
+
+  @@map(\\"user_locale\\")
+}
+
+model User {
+  id        Int        @id @default(autoincrement())
+  email     String     @unique
+  firstName String     @default(\\"\\") @map(\\"first_name\\")
+  lastName  String     @default(\\"\\") @map(\\"last_name\\")
+  locale    UserLocale @default(fr_FR) @map(\\"locale\\")
+
+  @@map(\\"user\\")
+}
+"
+`;

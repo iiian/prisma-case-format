@@ -78,7 +78,7 @@ export class ConventionTransformer {
       return [, reshape_model_error];
     }
 
-    const [reshaped_enum_map, reshape_enum_error] = ConventionTransformer.reshapeEnumDefinitions(lines, tableCaseConvention);
+    const [reshaped_enum_map, reshape_enum_error] = ConventionTransformer.reshapeEnumDefinitions(lines, tableCaseConvention, mapTableCaseConvention);
     if (reshape_enum_error) {
       return [, reshape_enum_error];
     }
@@ -182,7 +182,7 @@ export class ConventionTransformer {
         const reshaped_enum_name = tableCaseConvention(raw_enum_name);
         const store_name = mapTableCaseConvention?.(raw_enum_name) ?? existing_map_anno ?? raw_enum_name;
         const mapping_annotation_line_number = start + map_anno_index;
-        if (reshaped_enum_name !== raw_enum_name) {
+        if (reshaped_enum_name !== store_name) {
           const map_model_line = `  @@map("${store_name}")`;
           lines[start] = ConventionTransformer.transformDeclarationName(lines[start], raw_enum_name, tableCaseConvention);
           if (0 <= map_anno_index) {
