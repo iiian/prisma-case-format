@@ -321,7 +321,8 @@ describe('must properly map enum name to ', () => {
     };
     const [result, err] = ConventionTransformer.migrateCaseConventions(file_contents, opts);
     expect(err).toBeFalsy();
-    expect(result?.includes('@@map("post_type")')).toBeTruthy();
+    // We can't test “post_type” here because we just skip mappings if mapped name is equal to enum name.
+    expect(result?.includes('@@map("apple_colors")')).toBeTruthy();
   });
 });
 
@@ -375,4 +376,17 @@ test('override table mapping convention when enum mapping convention is specifie
   const [result, err] = ConventionTransformer.migrateCaseConventions(file_contents, opts);
   expect(err).toBeFalsy();
   expect(result?.includes('@@map("PostType")')).toBeTruthy();
+});
+
+test('skip enum name mapping when enum name is equal to map', () => {
+  const file_contents = getFixture('enum');
+
+  const opts = {
+    tableCaseConvention: pascalCase,
+    fieldCaseConvention: camelCase,
+    mapEnumCaseConvention: pascalCase,
+  };
+  const [result, err] = ConventionTransformer.migrateCaseConventions(file_contents, opts);
+  expect(err).toBeFalsy();
+  expect(result?.includes('@@map("post_type")')).toBeFalsy();
 });

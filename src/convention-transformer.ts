@@ -241,7 +241,14 @@ export class ConventionTransformer {
 
       // If mapping is enabled, put new “@@map()” at the end of enum definition.
       if (enumName && mapCaseConvention) {
-        enumDefinition.splice(enumDefinition.length - 1, 0, '', `  @@map("${mapCaseConvention(enumName)}")`)
+        const enumNewName = mapCaseConvention(enumName)
+
+        // If mapped name equals to enum name, then just skip.
+        if (enumName === enumNewName) {
+          continue
+        }
+
+        enumDefinition.splice(enumDefinition.length - 1, 0, '', `  @@map("${enumNewName}")`)
       }
 
       definitions.push(enumDefinition)
