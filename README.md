@@ -23,8 +23,10 @@ Options:
   -D, --dry-run                    print changes to console, rather than back to file (default: false)
   --table-case <tableCase>         case convention for table names (SEE BOTTOM) (default: "pascal")
   --field-case <fieldCase>         case convention for field names (default: "camel")
+  --enum-case <enumCase>           case convention for enum names
   --map-table-case <mapTableCase>  case convention for @@map() annotations (SEE BOTTOM)
   --map-field-case <mapFieldCase>  case convention for @map() annotations
+  --map-enum-case <mapEnumCase>    case convention for @@map() annotations on enums
   -p, --pluralize                  optionally pluralize array type fields (default: false)
   -V, --version                    hint: you have v1.7.1
   -h, --help                       display help for command
