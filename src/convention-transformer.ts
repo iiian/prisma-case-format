@@ -328,10 +328,6 @@ export class ConventionTransformer {
             map_field_fragment = ` @map("${store_name}")`;
           }
 
-          if (model_name === store_name) {
-            map_field_fragment = '';
-          }
-
           // Exception field
           const enum_name = reshaped_enum_map.get(type);
           if (enum_name) {
@@ -341,6 +337,10 @@ export class ConventionTransformer {
           } else if (!isPrimitive(type)) {
             // Unhandled field type
             type = tableCaseConvention(type);
+          }
+
+          if (model_name === store_name) {
+            map_field_fragment = '';
           }
 
           lines[i] = lines[i].replace(search_term, [chunk0, model_name, chunk2, type, is_array_or_nullable, map_field_fragment, chunk5,].join(''));
