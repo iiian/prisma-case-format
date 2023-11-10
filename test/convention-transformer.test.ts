@@ -317,7 +317,7 @@ describe('must properly map enum name to ', () => {
     const opts = {
       tableCaseConvention: pascalCase,
       fieldCaseConvention: camelCase,
-      mapEnumCaseConvention: pascalCase,
+      mapEnumCaseConvention: snakeCase,
     };
     const [result, err] = ConventionTransformer.migrateCaseConventions(file_contents, opts);
     expect(err).toBeFalsy();
@@ -369,6 +369,7 @@ test('override table mapping convention when enum mapping convention is specifie
   const opts = {
     tableCaseConvention: pascalCase,
     fieldCaseConvention: camelCase,
+    mapTableCaseConvention: camelCase,
     mapEnumCaseConvention: pascalCase,
   };
   const [result, err] = ConventionTransformer.migrateCaseConventions(file_contents, opts);
