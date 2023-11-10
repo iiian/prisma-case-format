@@ -30,11 +30,13 @@ program
   .option('-D, --dry-run', 'print changes to console, rather than back to file', false)
   .option('--table-case <tableCase>', 'case convention for table names (SEE BOTTOM)', 'pascal')
   .option('--field-case <fieldCase>', 'case convention for field names', 'camel')
+  .option('--enum-case <enumCase>', 'case convention for enum names. In case of not declared, uses value of “--table-case”.', 'pascal')
   .option('--map-table-case <mapTableCase>', 'case convention for @@map() annotations (SEE BOTTOM)')
   .option('--map-field-case <mapFieldCase>', 'case convention for @map() annotations')
+  .option('--map-enum-case <mapEnumCase>', 'case convention for @map() annotations of enums.  In case of not declared, uses value of “--map-table-case”.')
   .option('-p, --pluralize', 'optionally pluralize array type fields', false)
   .version(VERSION, '', `hint: you have v${VERSION}`)
-  ;
+;
 program.parse(process.argv);
 
 run();
@@ -59,9 +61,9 @@ async function run() {
     if (err) {
       console.warn(chalk.yellow(`Warning: encountered unsupported case convention: "${options.fieldCase}". Defaulting to "pascal" case.`));
       [tableCaseConvention,] = tryGetTableCaseConvention('pascal');
-    } else {
-      convention_options.tableCaseConvention = tableCaseConvention!;
     }
+
+    convention_options.tableCaseConvention = tableCaseConvention!;
   }
 
   if (options.fieldCase) {
@@ -69,9 +71,19 @@ async function run() {
     if (err) {
       console.warn(chalk.yellow(`Warning: encountered unsupported case convention: "${options.fieldCase}". Defaulting to "camel" case.`));
       [fieldCaseConvention,] = tryGetTableCaseConvention('camel');
-    } else {
-      convention_options.fieldCaseConvention = fieldCaseConvention!;
     }
+
+    convention_options.fieldCaseConvention = fieldCaseConvention!;
+  }
+
+  if (options.enumCase) {
+    let [caseConvention, err] = tryGetTableCaseConvention(options.enumCase);
+    if (err) {
+      console.warn(chalk.yellow(`Warning: encountered unsupported case convention: "${options.enumCase}". Defaulting to "pascal" case.`));
+      [caseConvention,] = tryGetTableCaseConvention('pascal');
+    }
+
+    convention_options.enumCaseConvention = caseConvention!;
   }
 
   if (options.mapTableCase) {
@@ -97,6 +109,19 @@ async function run() {
       process.exit(1);
     } else {
       convention_options.mapFieldCaseConvention = convention!;
+    }
+  }
+
+  if (options.mapEnumCase) {
+    const opt_case: string = options.mapEnumCase;
+    let [convention, err] = tryGetTableCaseConvention(opt_case);
+    if (err) {
+      console.error(chalk.red(`Error: encountered unsupported case convention for --map-enum-case: "${opt_case}".`));
+      console.error(chalk.red(`Suggestion: ${SUPPORTED_CASE_CONVENTIONS_MESSAGE}`));
+      program.outputHelp();
+      process.exit(1);
+    } else {
+      convention_options.mapEnumCaseConvention = convention!;
     }
   }
 
@@ -133,13 +158,13 @@ export function tryGetTableCaseConvention(raw_type: string): [CaseChange?, Error
   const [type, case_flavor] = raw_type.split(',');
   let kase: CaseChange;
   switch (type) {
-    case 'pascal': 
+    case 'pascal':
     kase = pascalCase;
     break;
-    case 'camel': 
+    case 'camel':
     kase = camelCase;
     break;
-    case 'snake': 
+    case 'snake':
     kase = snakeCase;
     break;
     default: return [, new Error('unsupported case convention: ' + type)];
@@ -156,4 +181,3 @@ export function tryGetTableCaseConvention(raw_type: string): [CaseChange?, Error
 
   return [kase,];
 }
-

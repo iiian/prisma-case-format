@@ -92,7 +92,7 @@ const supported_case_conventions: { caseConvention: CaseChange }[] = [
  * !!Warning!! Jest snapshots are _almost_ an anti-pattern. This is because if
  * you rename the test case, and introduce a bug, the bug is now valid to Jest.
  * This means you _must_ participate in orthodox red-green-refactor.
- * 
+ *
  * If you rename this test, don't do it while the build is broken.
  */
 test.each(supported_case_conventions)('it can enforce a specified case convention on all fields of all tables ($caseConvention.name)', async ({ caseConvention }) => {
@@ -126,7 +126,7 @@ test.each(supported_case_conventions)('it can enforce a specified case conventio
  * !!Warning!! Jest snapshots are _almost_ an anti-pattern. This is because if
  * you rename the test case, and introduce a bug, the bug is now valid to Jest.
  * This means you _must_ participate in orthodox red-green-refactor.
- * 
+ *
  * If you rename this test, don't do it while the build is broken.
  */
 test.each(supported_case_conventions)('it can enforce a specified case convention on all table names ($caseConvention.name)', async ({ caseConvention }) => {
@@ -241,4 +241,152 @@ test('it can rename enum in the database', async () => {
   expect(err).toBeFalsy();
   const result = await formatSchema({ schema: schema! });
   expect(result).toMatchSnapshot();
+});
+
+describe('must properly bring enum name to', () => {
+  test('camelCase', () => {
+    const file_contents = getFixture('enum');
+
+    const opts = {
+      tableCaseConvention: pascalCase,
+      fieldCaseConvention: camelCase,
+      enumCaseConvention: camelCase,
+    };
+    const [result, err] = ConventionTransformer.migrateCaseConventions(file_contents, opts);
+    expect(err).toBeFalsy();
+    expect(result?.includes('enum postType')).toBeTruthy();
+  })
+
+  test('PascalCase', () => {
+    const file_contents = getFixture('enum');
+
+    const opts = {
+      tableCaseConvention: pascalCase,
+      fieldCaseConvention: camelCase,
+      enumCaseConvention: pascalCase,
+    };
+    const [result, err] = ConventionTransformer.migrateCaseConventions(file_contents, opts);
+    expect(err).toBeFalsy();
+    expect(result?.includes('enum PostType')).toBeTruthy();
+  })
+
+  test('snake_case', () => {
+    const file_contents = getFixture('enum');
+
+    const opts = {
+      tableCaseConvention: pascalCase,
+      fieldCaseConvention: camelCase,
+      enumCaseConvention: snakeCase,
+    };
+    const [result, err] = ConventionTransformer.migrateCaseConventions(file_contents, opts);
+    expect(err).toBeFalsy();
+    expect(result?.includes('enum post_type')).toBeTruthy();
+  });
+});
+
+describe('must properly map enum name to ', () => {
+  test('camelCase', () => {
+    const file_contents = getFixture('enum');
+
+    const opts = {
+      tableCaseConvention: pascalCase,
+      fieldCaseConvention: camelCase,
+      mapEnumCaseConvention: camelCase,
+    };
+    const [result, err] = ConventionTransformer.migrateCaseConventions(file_contents, opts);
+    expect(err).toBeFalsy();
+    expect(result?.includes('@@map("postType")')).toBeTruthy();
+  });
+
+  test('PascalCase', () => {
+    const file_contents = getFixture('enum');
+
+    const opts = {
+      tableCaseConvention: pascalCase,
+      fieldCaseConvention: camelCase,
+      mapEnumCaseConvention: pascalCase,
+    };
+    const [result, err] = ConventionTransformer.migrateCaseConventions(file_contents, opts);
+    expect(err).toBeFalsy();
+    expect(result?.includes('@@map("PostType")')).toBeTruthy();
+  });
+
+  test('snake_case', () => {
+    const file_contents = getFixture('enum');
+
+    const opts = {
+      tableCaseConvention: pascalCase,
+      fieldCaseConvention: camelCase,
+      mapEnumCaseConvention: snakeCase,
+    };
+    const [result, err] = ConventionTransformer.migrateCaseConventions(file_contents, opts);
+    expect(err).toBeFalsy();
+    // We can't test “post_type” here because we just skip mappings if mapped name is equal to enum name.
+    expect(result?.includes('@@map("apple_colors")')).toBeTruthy();
+  });
+});
+
+test('use table naming convention when enum naming convention is not specified', () => {
+  const file_contents = getFixture('enum');
+
+  const opts = {
+    tableCaseConvention: pascalCase,
+    fieldCaseConvention: camelCase,
+  };
+  const [result, err] = ConventionTransformer.migrateCaseConventions(file_contents, opts);
+  expect(err).toBeFalsy();
+  expect(result?.includes('enum PostType')).toBeTruthy();
+});
+
+test('override table naming convention when enum naming convention is specified', () => {
+  const file_contents = getFixture('enum');
+
+  const opts = {
+    tableCaseConvention: pascalCase,
+    fieldCaseConvention: camelCase,
+    enumCaseConvention: camelCase,
+  };
+  const [result, err] = ConventionTransformer.migrateCaseConventions(file_contents, opts);
+  expect(err).toBeFalsy();
+  expect(result?.includes('enum postType')).toBeTruthy();
+});
+
+test('use table mapping convention when enum mapping convention is not specified', () => {
+  const file_contents = getFixture('enum');
+
+  const opts = {
+    tableCaseConvention: pascalCase,
+    fieldCaseConvention: camelCase,
+    mapTableCaseConvention: camelCase,
+  };
+  const [result, err] = ConventionTransformer.migrateCaseConventions(file_contents, opts);
+  expect(err).toBeFalsy();
+  expect(result?.includes('@@map("postType")')).toBeTruthy();
+});
+
+test('override table mapping convention when enum mapping convention is specified', () => {
+  const file_contents = getFixture('enum');
+
+  const opts = {
+    tableCaseConvention: pascalCase,
+    fieldCaseConvention: camelCase,
+    mapTableCaseConvention: camelCase,
+    mapEnumCaseConvention: pascalCase,
+  };
+  const [result, err] = ConventionTransformer.migrateCaseConventions(file_contents, opts);
+  expect(err).toBeFalsy();
+  expect(result?.includes('@@map("PostType")')).toBeTruthy();
+});
+
+test('skip enum name mapping when enum name is equal to map', () => {
+  const file_contents = getFixture('enum');
+
+  const opts = {
+    tableCaseConvention: pascalCase,
+    fieldCaseConvention: camelCase,
+    mapEnumCaseConvention: pascalCase,
+  };
+  const [result, err] = ConventionTransformer.migrateCaseConventions(file_contents, opts);
+  expect(err).toBeFalsy();
+  expect(result?.includes('@@map("post_type")')).toBeFalsy();
 });
