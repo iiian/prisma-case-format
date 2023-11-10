@@ -137,7 +137,7 @@ model User {
   email     String     @unique
   firstName String     @default(\\"\\") @map(\\"first_name\\")
   lastName  String     @default(\\"\\") @map(\\"last_name\\")
-  locale    UserLocale @default(fr_FR) @map(\\"locale\\")
+  locale    UserLocale @default(fr_FR)
 
   @@map(\\"user\\")
 }
