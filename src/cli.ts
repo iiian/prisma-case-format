@@ -172,11 +172,11 @@ export function tryGetTableCaseConvention(raw_type: string): [CaseChange?, Error
 
   switch (case_flavor) {
     case 'plural':
-      kase = asPluralized(kase);
-      break;
+    kase = asPluralized(kase);
+    break;
     case 'singular':
-      kase = asSingularized(kase);
-      break;
+    kase = asSingularized(kase);
+    break;
   }
 
   return [kase,];
