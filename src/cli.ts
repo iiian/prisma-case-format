@@ -159,14 +159,14 @@ export function tryGetTableCaseConvention(raw_type: string): [CaseChange?, Error
   let kase: CaseChange;
   switch (type) {
     case 'pascal':
-      kase = pascalCase;
-      break;
+    kase = pascalCase;
+    break;
     case 'camel':
-      kase = camelCase;
-      break;
+    kase = camelCase;
+    break;
     case 'snake':
-      kase = snakeCase;
-      break;
+    kase = snakeCase;
+    break;
     default: return [, new Error('unsupported case convention: ' + type)];
   }
 
