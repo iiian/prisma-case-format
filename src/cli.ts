@@ -61,9 +61,9 @@ async function run() {
     if (err) {
       console.warn(chalk.yellow(`Warning: encountered unsupported case convention: "${options.fieldCase}". Defaulting to "pascal" case.`));
       [tableCaseConvention,] = tryGetTableCaseConvention('pascal');
-    } else {
-      convention_options.tableCaseConvention = tableCaseConvention!;
     }
+
+    convention_options.tableCaseConvention = tableCaseConvention!;
   }
 
   if (options.fieldCase) {
@@ -71,9 +71,9 @@ async function run() {
     if (err) {
       console.warn(chalk.yellow(`Warning: encountered unsupported case convention: "${options.fieldCase}". Defaulting to "camel" case.`));
       [fieldCaseConvention,] = tryGetTableCaseConvention('camel');
-    } else {
-      convention_options.fieldCaseConvention = fieldCaseConvention!;
     }
+
+    convention_options.fieldCaseConvention = fieldCaseConvention!;
   }
 
   if (options.enumCase) {
@@ -81,9 +81,9 @@ async function run() {
     if (err) {
       console.warn(chalk.yellow(`Warning: encountered unsupported case convention: "${options.enumCase}". Defaulting to "pascal" case.`));
       [caseConvention,] = tryGetTableCaseConvention('pascal');
-    } else {
-      convention_options.enumCaseConvention = caseConvention!;
     }
+
+    convention_options.enumCaseConvention = caseConvention!;
   }
 
   if (options.mapTableCase) {
