@@ -16,8 +16,10 @@ type ReshapeModelFieldsOptions = {
 export type MigrateCaseConventionsOptions = {
   tableCaseConvention: CaseChange,
   fieldCaseConvention: CaseChange,
+  enumCaseConvention?: CaseChange,
   mapTableCaseConvention?: CaseChange,
   mapFieldCaseConvention?: CaseChange,
+  mapEnumCaseConvention?: CaseChange,
   pluralize?: boolean;
 };
 
@@ -71,6 +73,9 @@ export class ConventionTransformer {
       pluralize,
     } = options;
 
+    const enumCaseConvention = options.enumCaseConvention ?? options.tableCaseConvention
+    const mapEnumCaseConvention = options.mapEnumCaseConvention ?? options.mapTableCaseConvention
+
     const lines = file_contents.split('\n');
 
     const [reshape_model_error] = ConventionTransformer.reshapeModelDefinitions(lines, tableCaseConvention, mapTableCaseConvention);
@@ -78,7 +83,7 @@ export class ConventionTransformer {
       return [, reshape_model_error];
     }
 
-    const [reshaped_enum_map, reshape_enum_error] = ConventionTransformer.reshapeEnumDefinitions(lines, tableCaseConvention, mapTableCaseConvention);
+    const [reshaped_enum_map, reshape_enum_error] = ConventionTransformer.reshapeEnumDefinitions(lines, enumCaseConvention, mapEnumCaseConvention);
     if (reshape_enum_error) {
       return [, reshape_enum_error];
     }
@@ -96,7 +101,6 @@ export class ConventionTransformer {
     }
 
     return [lines!.join('\n'),];
-
   }
 
   private static findExistingMapAnnotation(lines: string[]): [string | undefined, number] {
@@ -116,7 +120,7 @@ export class ConventionTransformer {
     if (model_bounds_error) {
       return [model_bounds_error];
     }
-    /* 
+    /*
       in scope [start, end]:
         - find raw_model_header : REQUIRED  (ex: `model MyModel {`)
         - find existing_map_anno: OPTIONAL  (ex: `  @@map("my_model")`)
@@ -217,7 +221,7 @@ export class ConventionTransformer {
 
     for (const [start, end] of model_bounds!) {
       for (let i = start; i < end; i++) {
-        /* 
+        /*
           in scope lines[i]:
             - find field  : REQUIRED  (ex: `>>>id<<< @id @map("Id")`)
             - find raw_@map        : OPTIONAL  (ex: `id @id >>>@map("Id")<<<`)
@@ -227,7 +231,7 @@ export class ConventionTransformer {
             2. if model-name == store-name, ensure @map does not exist
               if model-name != store-name, apply @map("store-name")
             where
-            
+
             field-name := fieldCase(field)
             store-name := mapFieldCase?(field-name) ?? existing raw_@map ?? field
         */
@@ -301,7 +305,7 @@ export class ConventionTransformer {
           const field_names = table_index_declaration_line!.groups!['fields'];
           const updated_field_names = `[${field_names.split(/,\s*/).map(fieldCaseConvention).join(', ')}]`;
           lines[i] = lines[i].replace(field_names, updated_field_names);
-        } 
+        }
         table_index_declaration_line =
           table_index_declaration_line ? null : CPLX_TABLE_INDEX_REGEX.exec(lines[i]);
         if (table_index_declaration_line) {
@@ -315,7 +319,7 @@ export class ConventionTransformer {
             lines[i]
           );
         }
-        
+
 
         const table_id_declaration_line = TABLE_ID_REGEX.exec(lines[i]);
         if (table_id_declaration_line) {
@@ -345,7 +349,7 @@ export class ConventionTransformer {
     }
     const regex = new RegExp(`${start_position}\\s*:\\s*\\[([^\\]]+)\\]`, 'g');
     const matches = regex.exec(haystack);
-    
+
     return matches ? (ConventionTransformer.stripProperties(matches[1]).split(/\s*[,]\s*/)) : [];
   }
 
