@@ -83,7 +83,7 @@ export class ConventionTransformer {
       return [, reshape_model_error];
     }
 
-    const [reshaped_enum_map, reshape_enum_error] = ConventionTransformer.reshapeEnumDefinitions(lines, enumCaseConvention, mapEnumCaseConvention);
+    const [reshaped_enum_map, reshape_enum_error] = ConventionTransformer.getEnumNameMap(lines, enumCaseConvention);
     if (reshape_enum_error) {
       return [, reshape_enum_error];
     }
@@ -98,6 +98,11 @@ export class ConventionTransformer {
     const [reshape_model_field_error] = ConventionTransformer.reshapeModelFields(lines, reshape_model_options);
     if (reshape_model_field_error) {
       return [, reshape_model_field_error];
+    }
+
+    const [enum_reshape_error] = ConventionTransformer.reshapeEnumDefinitions(lines, enumCaseConvention, mapEnumCaseConvention);
+    if (enum_reshape_error) {
+      return [, enum_reshape_error];
     }
 
     return [lines!.join('\n'),];
@@ -167,7 +172,7 @@ export class ConventionTransformer {
     return [];
   }
 
-  private static reshapeEnumDefinitions(lines: string[], tableCaseConvention: CaseChange, mapTableCaseConvention?: CaseChange): [Map<string, string>?, Error?] {
+  private static getEnumNameMap(lines: string[], tableCaseConvention: CaseChange): [Map<string, string>?, Error?] {
     const reshaped_enum_map = new Map<string, string>(); // Map<origin_enum_name, reshaped_enum_name>
 
     const [enum_bounds, enum_bounds_error] = ConventionTransformer.getDefinitionBounds([ENUM_TOKEN], lines);
@@ -176,27 +181,12 @@ export class ConventionTransformer {
     }
 
     let offset = 0;
-    for (const [base_start, base_end] of enum_bounds!) {
+    for (const [base_start] of enum_bounds!) {
       const start = base_start + offset;
-      const end = base_end + offset;
       try {
         const enum_declaration_line = ENUM_DECLARATION_REGEX.exec(lines[start]);
-        const [existing_map_anno, map_anno_index] = ConventionTransformer.findExistingMapAnnotation(lines.slice(start, end));
         const raw_enum_name = enum_declaration_line!.groups!['enum'];
         const reshaped_enum_name = tableCaseConvention(raw_enum_name);
-        const store_name = mapTableCaseConvention?.(raw_enum_name) ?? existing_map_anno ?? raw_enum_name;
-        const mapping_annotation_line_number = start + map_anno_index;
-        if (reshaped_enum_name !== store_name) {
-          const map_model_line = `  @@map("${store_name}")`;
-          lines[start] = ConventionTransformer.transformDeclarationName(lines[start], raw_enum_name, tableCaseConvention);
-          if (0 <= map_anno_index) {
-            lines.splice(mapping_annotation_line_number, 1, map_model_line);
-          } else {
-            lines.splice(start + 1, 0, map_model_line);
-            offset += 1;
-          }
-        }
-
         reshaped_enum_map.set(raw_enum_name, reshaped_enum_name);
       } catch (error) {
         return [, error as Error];
@@ -204,6 +194,78 @@ export class ConventionTransformer {
     }
 
     return [reshaped_enum_map];
+  }
+
+  private static reshapeEnumDefinitions(lines: string[], caseConvention: CaseChange, mapCaseConvention?: CaseChange): [Error?] {
+    // Collects all enums.
+    const definitions: string[][] = []
+
+    const [bounds, err] = ConventionTransformer.getDefinitionBounds([ENUM_TOKEN], lines);
+    if (err) {
+      return [err];
+    }
+
+    for (const [start, end] of bounds!) {
+      // Collects single enum.
+      const enumDefinition = []
+      let enumName: string | null = null
+
+      for (let i = start; i <= end; i++) {
+        let line = lines[i]
+
+        const header = ENUM_DECLARATION_REGEX.exec(line);
+        const mapDeclaration = ENTITY_MAP_ANNOTATION_REGEX.exec(line)
+
+        if (header) {
+          enumName = header[1];
+
+          // Convert case.
+          const enumNewName = caseConvention(enumName)
+
+          // Replace the definition header.
+          line = line.replace(/(\s*enum\s*)(\w+)(\s*\{\s*)/, `$1${enumNewName}$3`);
+        }
+
+        // If mapping is enabled, skip old “@@map()”.
+        if (mapDeclaration && mapCaseConvention) {
+          continue
+        }
+
+        enumDefinition.push(line)
+
+        // Break if definition end is reached.
+        if (/.*}.*/.test(line)) {
+          break
+        }
+      }
+
+      // If mapping is enabled, put new “@@map()” at the end of enum definition.
+      if (enumName && mapCaseConvention) {
+        enumDefinition.splice(enumDefinition.length - 1, 0, '', `  @@map("${mapCaseConvention(enumName)}")`)
+      }
+
+      definitions.push(enumDefinition)
+    }
+
+    // Replace old enum definition by new ones one-by-one.
+    for (const index in definitions) {
+      const definition = definitions[index];
+
+      // We could shift lines during replacement of definitions, so need to get bounds again every time.
+      const [bounds] = ConventionTransformer.getDefinitionBounds([ENUM_TOKEN], lines)
+
+      if (!bounds) {
+        break
+      }
+
+      const oldDefinitionStart = bounds[index][0]
+      const oldDefinitionEnd = bounds[index][1]
+      const oldDefinitionLength = oldDefinitionEnd - oldDefinitionStart + 1
+
+      lines.splice(oldDefinitionStart, oldDefinitionLength, ...definition)
+    }
+
+    return [];
   }
 
   /**

@@ -698,16 +698,12 @@ model Posts {
 enum PostType {
   Note
   Question
-
-  @@map(\\"post_type\\")
 }
 
 enum SnaggleFlark {
   foo
   buz
   bazz
-
-  @@map(\\"snaggle_flark\\")
 }
 "
 `;
