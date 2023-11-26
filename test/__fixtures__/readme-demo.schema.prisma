@@ -1,0 +1,10 @@
+model house_rating {
+  id       Int    @id @default(autoincrement())
+  house_id String
+  house    house  @relation(fields: [house_id], references: [id])
+}
+
+model house {
+  id           String         @id @default(uuid()) // comments
+  house_rating house_rating[] // do comments get
+}

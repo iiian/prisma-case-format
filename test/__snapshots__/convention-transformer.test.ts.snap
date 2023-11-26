@@ -698,12 +698,16 @@ model Posts {
 enum PostType {
   Note
   Question
+
+  @@map(\\"post_type\\")
 }
 
 enum SnaggleFlark {
   foo
   buz
   bazz
+
+  @@map(\\"snaggle_flark\\")
 }
 
 enum AppleColors {
@@ -729,6 +733,22 @@ model User {
   locale    UserLocale @default(fr_FR)
 
   @@map(\\"user\\")
+}
+"
+`;
+
+exports[`the readme demo should work 1`] = `
+"model HouseRating {
+  @@map(\\"house_rating\\")
+  Id       Int @map(\\"id\\")    @id @default(autoincrement())
+  HouseId String @map(\\"house_id\\")
+  House    House  @relation(fields: [HouseId], references: [Id])
+}
+
+model House {
+  @@map(\\"house\\")
+  Id           String @map(\\"id\\")         @id @default(uuid()) // comments
+  HouseRating HouseRating[] // do comments get
 }
 "
 `;
