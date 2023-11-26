@@ -26,6 +26,7 @@ export type MigrateCaseConventionsOptions = {
 export const DEFAULTS: MigrateCaseConventionsOptions = {
   tableCaseConvention: pascalCase,
   fieldCaseConvention: camelCase,
+  enumCaseConvention: pascalCase,
   pluralize: false,
 };
 
@@ -120,45 +121,38 @@ export class ConventionTransformer {
   }
 
   private static reshapeModelDefinitions(lines: string[], tableCaseConvention: CaseChange, mapTableCaseConvention?: CaseChange): [Error?] {
-
     const [model_bounds, model_bounds_error] = ConventionTransformer.getDefinitionBounds([MODEL_TOKEN, VIEW_TOKEN], lines);
     if (model_bounds_error) {
       return [model_bounds_error];
     }
     /*
-      in scope [start, end]:
-        - find raw_model_header : REQUIRED  (ex: `model MyModel {`)
-        - find existing_map_anno: OPTIONAL  (ex: `  @@map("my_model")`)
-
-        ensure existence of 2 symbols: [model-name, store-name]
-        1. raw_model_header gets updated to be model-name
-        2. if model-name == store-name, ensure @@map does not exist
-           if model-name != store-name, apply @@map("store-name")
-
-        where:
-          model-name := tableCase(raw_model_header)
-          store-name := mapTableCase?(model-name) ?? existing_map_anno ?? raw_model_header
-    */
+     * Applies the following invariant across all model names:
+     *  - tableCaseConvention(curr_model_name) is used for the declaration of the model
+     *  - mapTableCase(curr_model_name) or current value is used for the @@map annotation, 
+     *     unless that would equal tableCaseConvention(curr_model_name)
+     */
     let offset = 0;
     for (let [base_start, base_end] of model_bounds!) {
       const start = base_start + offset;
       const end = base_end + offset;
       try {
         const model_declaration_line = MODEL_DECLARATION_REGEX.exec(lines[start]);
-        const [existing_map_anno, map_anno_index] = ConventionTransformer.findExistingMapAnnotation(lines.slice(start, end));
-        const raw_model_header = model_declaration_line!.groups!['model'];
-        const model_name = tableCaseConvention(raw_model_header);
-        const store_name = mapTableCaseConvention?.(raw_model_header) ?? existing_map_anno ?? raw_model_header;
-        const mapping_annotation_line_number = start + map_anno_index;
-        if (model_name == store_name && 0 <= map_anno_index) {
-          lines.splice(mapping_annotation_line_number, 1);
+        const [existing_db_model_name, map_anno_index] = ConventionTransformer.findExistingMapAnnotation(lines.slice(start, end));
+        const curr_model_name = model_declaration_line!.groups!['model'];
+        const conv_model_name = tableCaseConvention(curr_model_name);
+        const db_model_name = mapTableCaseConvention?.(curr_model_name) ?? existing_db_model_name ?? curr_model_name;
+        const map_anno_line_no = start + map_anno_index;
+        if (conv_model_name == db_model_name && 0 <= map_anno_index) {
+          lines.splice(map_anno_line_no, 1);
           offset -= 1;
         }
-        if (model_name != store_name) {
-          const map_model_line = `  @@map("${store_name}")`;
-          lines[start] = ConventionTransformer.transformDeclarationName(lines[start], model_name, tableCaseConvention);
+        if (conv_model_name !== curr_model_name) {
+          lines[start] = lines[start].replace(curr_model_name, conv_model_name);
+        }
+        if (conv_model_name !== db_model_name) {
+          const map_model_line = `  @@map("${db_model_name}")`;
           if (0 <= map_anno_index) {
-            lines.splice(mapping_annotation_line_number, 1, map_model_line);
+            lines.splice(map_anno_line_no, 1, map_model_line);
           } else {
             lines.splice(start + 1, 0, map_model_line);
             offset += 1;
@@ -196,90 +190,52 @@ export class ConventionTransformer {
     return [reshaped_enum_map];
   }
 
-  private static reshapeEnumDefinitions(lines: string[], caseConvention: CaseChange, mapCaseConvention?: CaseChange): [Error?] {
-    // Collects all enums.
-    const definitions: string[][] = []
-
-    const [bounds, err] = ConventionTransformer.getDefinitionBounds([ENUM_TOKEN], lines);
+  private static reshapeEnumDefinitions(lines: string[], enumCaseConvention: CaseChange, mapEnumCaseConvention?: CaseChange): [Error?] {
+    const [enum_bounds, err] = ConventionTransformer.getDefinitionBounds([ENUM_TOKEN], lines);
     if (err) {
       return [err];
     }
-
-    for (const [start, end] of bounds!) {
-      // Collects single enum.
-      const enumDefinition = []
-      let enumName: string | null = null
-
-      for (let i = start; i <= end; i++) {
-        let line = lines[i]
-
-        const header = ENUM_DECLARATION_REGEX.exec(line);
-        const mapDeclaration = ENTITY_MAP_ANNOTATION_REGEX.exec(line)
-
-        if (header) {
-          enumName = header[1];
-
-          // Convert case.
-          const enumNewName = caseConvention(enumName)
-
-          // Replace the definition header.
-          line = line.replace(/(\s*enum\s*)(\w+)(\s*\{\s*)/, `$1${enumNewName}$3`);
+    /*
+     * Applies the following invariant across all enum names:
+     *  - enumCaseConvention(curr_enum_name) is used for the declaration of the enum
+     *  - mapEnumCase(curr_enum_name) or current value is used for the @@map annotation, 
+     *     unless that would equal tableCaseConvention(curr_enum_name)
+     */
+    let offset = 0;
+    for (let [base_start, base_end] of enum_bounds!) {
+      const start = base_start + offset;
+      const end = base_end + offset;
+      try {
+        const enum_declaration_line = ENUM_DECLARATION_REGEX.exec(lines[start]);
+        const [existing_db_enum_name, map_anno_idx] = ConventionTransformer.findExistingMapAnnotation(lines.slice(start, end));
+        const curr_enum_name = enum_declaration_line!.groups!['enum'];
+        const conv_enum_name = enumCaseConvention(curr_enum_name);
+        const db_enum_name = mapEnumCaseConvention?.(curr_enum_name) ?? existing_db_enum_name ?? curr_enum_name;
+        const map_anno_line_no = start + map_anno_idx;
+        if (conv_enum_name == db_enum_name && 0 <= map_anno_idx) {
+          lines.splice(map_anno_line_no, 1);
+          offset -= 1;
         }
-
-        // If mapping is enabled, skip old “@@map()”.
-        if (mapDeclaration && mapCaseConvention) {
-          continue
+        if (conv_enum_name !== curr_enum_name) {
+          lines[start] = lines[start].replace(curr_enum_name, conv_enum_name);
         }
-
-        enumDefinition.push(line)
-
-        // Break if definition end is reached.
-        if (/.*}.*/.test(line)) {
-          break
+        if (conv_enum_name !== db_enum_name) {
+          const map_enum_line = `  @@map("${db_enum_name}")`;
+          if (0 <= map_anno_idx) {
+            lines.splice(map_anno_line_no, 1, map_enum_line);
+          } else {
+            lines.splice(start + 1, 0, map_enum_line);
+            offset += 1;
+          }
         }
+      } catch (error) {
+        return [error as Error];
       }
-
-      // If mapping is enabled, put new “@@map()” at the end of enum definition.
-      if (enumName && mapCaseConvention) {
-        const enumNewName = mapCaseConvention(enumName)
-
-        // If mapped name equals to enum name, then just skip.
-        if (enumName === enumNewName) {
-          continue
-        }
-
-        enumDefinition.splice(enumDefinition.length - 1, 0, '', `  @@map("${enumNewName}")`)
-      }
-
-      definitions.push(enumDefinition)
-    }
-
-    // Replace old enum definition by new ones one-by-one.
-    for (const index in definitions) {
-      const definition = definitions[index];
-
-      // We could shift lines during replacement of definitions, so need to get bounds again every time.
-      const [bounds] = ConventionTransformer.getDefinitionBounds([ENUM_TOKEN], lines)
-
-      if (!bounds) {
-        break
-      }
-
-      const oldDefinitionStart = bounds[index][0]
-      const oldDefinitionEnd = bounds[index][1]
-      const oldDefinitionLength = oldDefinitionEnd - oldDefinitionStart + 1
-
-      lines.splice(oldDefinitionStart, oldDefinitionLength, ...definition)
     }
 
     return [];
   }
 
-  /**
-   * Given a working schema.prisma change buffer, updates model fields based on
-   * conventions provided in. This includes updating references in the following
-   * annotation types: `@relation`, `@unique`, and `@index`.
-   */
   private static reshapeModelFields(lines: string[], options: ReshapeModelFieldsOptions): [Error?] {
     const { reshaped_enum_map, pluralize, fieldCaseConvention, tableCaseConvention, mapFieldCaseConvention } = options;
 
@@ -287,63 +243,54 @@ export class ConventionTransformer {
     if (model_bounds_error) {
       return [model_bounds_error];
     }
-
+    
+    /*
+     * Applies the following invariant across all model/view field names:
+     *  - fieldCaseConvention(curr_field_name) is used for the declaration of the model
+     *  - mapFieldCase(curr_field_name) or current value is used for the @map annotation, 
+     *     unless that would equal fieldCaseConvention(curr_field_name)
+     */
     for (const [start, end] of model_bounds!) {
-      for (let i = start; i < end; i++) {
-        /*
-          in scope lines[i]:
-            - find field  : REQUIRED  (ex: `>>>id<<< @id @map("Id")`)
-            - find raw_@map        : OPTIONAL  (ex: `id @id >>>@map("Id")<<<`)
-
-            ensure existence of 2 symbols: [model-name, store-name]
-            1. field becomes field-name
-            2. if model-name == store-name, ensure @map does not exist
-              if model-name != store-name, apply @map("store-name")
-            where
-
-            field-name := fieldCase(field)
-            store-name := mapFieldCase?(field-name) ?? existing raw_@map ?? field
-        */
+      for (let i = start+1; i < end; i++) {
         const field_declaration_line = FIELD_DECLARATION_REGEX.exec(lines[i]);
         if (field_declaration_line) {
           let [search_term, chunk0, field, chunk2, type, _unused, is_array_or_nullable, chunk5] = field_declaration_line;
-          const raw_map: string | undefined = MAP_ANNOTATION_REGEX.exec(chunk5)?.groups?.['map'];
-          if (raw_map) {
+          const og_db_field_name: string | undefined = MAP_ANNOTATION_REGEX.exec(chunk5)?.groups?.['map'];
+          const enum_name = reshaped_enum_map.get(type);
+          if (og_db_field_name) {
             // delete it, we'll tee it up again in a moment
-            chunk5 = chunk5.replace(`@map("${raw_map}")`, '');
+            chunk5 = chunk5.replace(`@map("${og_db_field_name}")`, '');
           }
-          let model_name = fieldCaseConvention(field);
-          const store_name = mapFieldCaseConvention?.(model_name) ?? raw_map ?? field;
+          let conv_field_name = fieldCaseConvention(field);
+          const db_field_name = mapFieldCaseConvention?.(conv_field_name) ?? og_db_field_name ?? field;
           if (pluralize && is_array_or_nullable.startsWith('[]')) {
-            model_name = plural(model_name);
+            conv_field_name = plural(conv_field_name);
           }
-          let map_field_fragment = '';
+          let map_anno_fragment = '';
 
-          // Primitive field
+          // Primitive type
           if (
-            model_name !== store_name &&
+            conv_field_name !== db_field_name &&
             !lines[i].includes('@relation') &&
             isPrimitive(type)
           ) {
-            map_field_fragment = ` @map("${store_name}")`;
-          }
-
-          // Exception field
-          const enum_name = reshaped_enum_map.get(type);
-          if (enum_name) {
-            // Enum field
+            map_anno_fragment = ` @map("${db_field_name}")`;
+          } 
+          // Enum type
+          else if (enum_name) {
             type = enum_name;
-            map_field_fragment = ` @map("${store_name}")`;
-          } else if (!isPrimitive(type)) {
-            // Unhandled field type
+            map_anno_fragment = ` @map("${db_field_name}")`;
+          } 
+          // User type
+          else if (!isPrimitive(type)) {
             type = tableCaseConvention(type);
           }
 
-          if (model_name === store_name) {
-            map_field_fragment = '';
+          if (conv_field_name === db_field_name) {
+            map_anno_fragment = '';
           }
 
-          lines[i] = lines[i].replace(search_term, [chunk0, model_name, chunk2, type, is_array_or_nullable, map_field_fragment, chunk5,].join(''));
+          lines[i] = lines[i].replace(search_term, [chunk0, conv_field_name, chunk2, type, is_array_or_nullable, map_anno_fragment, chunk5,].join(''));
         }
 
         const relation_annotation_line = RELATION_ANNOTATION_REGEX.exec(lines[i]);
@@ -462,9 +409,5 @@ export class ConventionTransformer {
       }
     }
     return [definition_bounds.sort(([start_a], [start_b]) => start_a - start_b),];
-  }
-
-  private static transformDeclarationName(declaration_line: string, declaration_name: string, tableCaseConvention: CaseChange): string {
-    return declaration_line.replace(declaration_name, tableCaseConvention(declaration_name));
   }
 }

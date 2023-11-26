@@ -3,7 +3,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { camelCase, pascalCase, snakeCase } from 'change-case';
-import { CaseChange, ConventionTransformer } from '../src/convention-transformer';
+import { CaseChange, ConventionTransformer, MigrateCaseConventionsOptions, getMigrateConventionDefaults } from '../src/convention-transformer';
 import { formatSchema } from '@prisma/internals';
 
 import { asPluralized, asSingularized } from '../src/caseConventions';
@@ -14,10 +14,22 @@ function getFixture(relative_path: string) {
   return readFileSync(join(FIXTURES_DIR, relative_path + PRISMA_SUFFIX), 'utf-8');
 }
 
+test('the readme demo should work', () => {
+  const file_contents  = getFixture('readme-demo');
+  const opts = {
+    ...getMigrateConventionDefaults(),
+    fieldCaseConvention: pascalCase,
+  };
+  const [result, err] = ConventionTransformer.migrateCaseConventions(file_contents, opts);
+  expect(err).toBeFalsy();
+  expect(result).toMatchSnapshot();
+});
+
 test('it can map model columns with under_scores to camelCase', () => {
   const file_contents = getFixture('model-columns-with-underscores');
 
   const opts = {
+    ...getMigrateConventionDefaults(),
     tableCaseConvention: pascalCase,
     fieldCaseConvention: camelCase,
     pluralize: false
@@ -30,6 +42,7 @@ test('it can map model columns with under_scores to camelCase', () => {
 test('it can map relations with cascading deletion rules & foreign_key names', () => {
   const file_contents = getFixture('cascading-deletion-and-fk')
   const opts = {
+    ...getMigrateConventionDefaults(),
     tableCaseConvention: pascalCase,
     fieldCaseConvention: camelCase,
     pluralize: false
@@ -41,9 +54,11 @@ test('it can map relations with cascading deletion rules & foreign_key names', (
 });
 
 test('it can map enum column to enum definition', async () => {
-  const opts = {
+  const opts: MigrateCaseConventionsOptions = {
+    ...getMigrateConventionDefaults(),
     tableCaseConvention: pascalCase,
     fieldCaseConvention: snakeCase,
+    enumCaseConvention: pascalCase,
     pluralize: false
   };
   const file_contents = getFixture('enum');
@@ -56,6 +71,7 @@ test('it can map enum column to enum definition', async () => {
 test('it can optionally pluralize fields', () => {
   const file_contents = getFixture('pluralize-fields');
   const opts = {
+    ...getMigrateConventionDefaults(),
     tableCaseConvention: pascalCase,
     fieldCaseConvention: camelCase,
     pluralize: true
@@ -77,6 +93,7 @@ test('it can account for comments on model lines', () => {
   const file_contents = getFixture('comments-on-model-lines');
 
   const opts = {
+    ...getMigrateConventionDefaults(),
     tableCaseConvention: pascalCase,
     fieldCaseConvention: camelCase,
     pluralize: false,
@@ -97,6 +114,7 @@ const supported_case_conventions: { caseConvention: CaseChange }[] = [
  */
 test.each(supported_case_conventions)('it can enforce a specified case convention on all fields of all tables ($caseConvention.name)', async ({ caseConvention }) => {
   const opts = {
+    ...getMigrateConventionDefaults(),
     tableCaseConvention: pascalCase,
     fieldCaseConvention: camelCase,
     mapFieldCaseConvention: caseConvention,
@@ -131,6 +149,7 @@ test.each(supported_case_conventions)('it can enforce a specified case conventio
  */
 test.each(supported_case_conventions)('it can enforce a specified case convention on all table names ($caseConvention.name)', async ({ caseConvention }) => {
   const opts = {
+    ...getMigrateConventionDefaults(),
     tableCaseConvention: pascalCase,
     fieldCaseConvention: camelCase,
     mapTableCaseConvention: caseConvention,
@@ -158,6 +177,7 @@ test.each(supported_case_conventions)('it can enforce a specified case conventio
 
 test('it can enforce a specified case convention on views', async () => {
   const opts = {
+    ...getMigrateConventionDefaults(),
     tableCaseConvention: pascalCase,
     fieldCaseConvention: camelCase,
     pluralize: true,
@@ -173,6 +193,7 @@ test('it can map columns with `view` in the name', () => {
   const file_contents = getFixture('columns-with-view-in-name');
 
   const opts = {
+    ...getMigrateConventionDefaults(),
     tableCaseConvention: pascalCase,
     fieldCaseConvention: camelCase,
     pluralize: false
@@ -186,6 +207,7 @@ test('it can map tables while separating pluralization', () => {
   const file_contents = getFixture('tables-with-pluralized-db-targets');
 
   const opts = {
+    ...getMigrateConventionDefaults(),
     tableCaseConvention: pascalCase,
     fieldCaseConvention: camelCase,
     mapTableCaseConvention: asPluralized(snakeCase),
@@ -201,6 +223,7 @@ test('it can map tables while separating pluralization', () => {
   const file_contents = getFixture('tables-with-pluralized-db-targets');
 
   const opts = {
+    ...getMigrateConventionDefaults(),
     tableCaseConvention: pascalCase,
     fieldCaseConvention: camelCase,
     mapTableCaseConvention: asSingularized(snakeCase),
@@ -218,6 +241,7 @@ test('it can map ...horrendous indexes that make your head hurt for these people
   const file_contents = getFixture('complex-index');
 
   const opts = {
+    ...getMigrateConventionDefaults(),
     tableCaseConvention: pascalCase,
     fieldCaseConvention: camelCase,
     mapTableCaseConvention: asSingularized(snakeCase),
@@ -232,6 +256,7 @@ test('it can rename enum in the database', async () => {
   const file_contents = getFixture('enum-tables-map');
 
   const opts = {
+    ...getMigrateConventionDefaults(),
     tableCaseConvention: pascalCase,
     fieldCaseConvention: camelCase,
     mapTableCaseConvention: snakeCase,
@@ -248,6 +273,7 @@ describe('must properly bring enum name to', () => {
     const file_contents = getFixture('enum');
 
     const opts = {
+      ...getMigrateConventionDefaults(),
       tableCaseConvention: pascalCase,
       fieldCaseConvention: camelCase,
       enumCaseConvention: camelCase,
@@ -261,6 +287,7 @@ describe('must properly bring enum name to', () => {
     const file_contents = getFixture('enum');
 
     const opts = {
+      ...getMigrateConventionDefaults(),
       tableCaseConvention: pascalCase,
       fieldCaseConvention: camelCase,
       enumCaseConvention: pascalCase,
@@ -274,6 +301,7 @@ describe('must properly bring enum name to', () => {
     const file_contents = getFixture('enum');
 
     const opts = {
+      ...getMigrateConventionDefaults(),
       tableCaseConvention: pascalCase,
       fieldCaseConvention: camelCase,
       enumCaseConvention: snakeCase,
@@ -289,6 +317,7 @@ describe('must properly map enum name to ', () => {
     const file_contents = getFixture('enum');
 
     const opts = {
+      ...getMigrateConventionDefaults(),
       tableCaseConvention: pascalCase,
       fieldCaseConvention: camelCase,
       mapEnumCaseConvention: camelCase,
@@ -302,19 +331,21 @@ describe('must properly map enum name to ', () => {
     const file_contents = getFixture('enum');
 
     const opts = {
+      ...getMigrateConventionDefaults(),
       tableCaseConvention: pascalCase,
       fieldCaseConvention: camelCase,
       mapEnumCaseConvention: pascalCase,
     };
     const [result, err] = ConventionTransformer.migrateCaseConventions(file_contents, opts);
     expect(err).toBeFalsy();
-    expect(result?.includes('@@map("PostType")')).toBeTruthy();
+    expect(result?.includes('@@map("PostType")')).toBeFalsy();
   });
 
   test('snake_case', () => {
     const file_contents = getFixture('enum');
 
     const opts = {
+      ...getMigrateConventionDefaults(),
       tableCaseConvention: pascalCase,
       fieldCaseConvention: camelCase,
       mapEnumCaseConvention: snakeCase,
@@ -330,6 +361,7 @@ test('use table naming convention when enum naming convention is not specified',
   const file_contents = getFixture('enum');
 
   const opts = {
+    ...getMigrateConventionDefaults(),
     tableCaseConvention: pascalCase,
     fieldCaseConvention: camelCase,
   };
@@ -342,6 +374,7 @@ test('override table naming convention when enum naming convention is specified'
   const file_contents = getFixture('enum');
 
   const opts = {
+    ...getMigrateConventionDefaults(),
     tableCaseConvention: pascalCase,
     fieldCaseConvention: camelCase,
     enumCaseConvention: camelCase,
@@ -355,6 +388,7 @@ test('use table mapping convention when enum mapping convention is not specified
   const file_contents = getFixture('enum');
 
   const opts = {
+    ...getMigrateConventionDefaults(),
     tableCaseConvention: pascalCase,
     fieldCaseConvention: camelCase,
     mapTableCaseConvention: camelCase,
@@ -368,6 +402,7 @@ test('override table mapping convention when enum mapping convention is specifie
   const file_contents = getFixture('enum');
 
   const opts = {
+    ...getMigrateConventionDefaults(),
     tableCaseConvention: pascalCase,
     fieldCaseConvention: camelCase,
     mapTableCaseConvention: camelCase,
@@ -375,13 +410,14 @@ test('override table mapping convention when enum mapping convention is specifie
   };
   const [result, err] = ConventionTransformer.migrateCaseConventions(file_contents, opts);
   expect(err).toBeFalsy();
-  expect(result?.includes('@@map("PostType")')).toBeTruthy();
+  expect(result?.includes('@@map("PostType")')).toBeFalsy();
 });
 
 test('skip enum name mapping when enum name is equal to map', () => {
   const file_contents = getFixture('enum');
 
   const opts = {
+    ...getMigrateConventionDefaults(),
     tableCaseConvention: pascalCase,
     fieldCaseConvention: camelCase,
     mapEnumCaseConvention: pascalCase,
