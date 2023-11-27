@@ -198,8 +198,10 @@ The `.prisma-case-format` file supports specifying that a particular model or fi
 ```yaml
 default: ...
 override:
-  mYTaBlE: 'disable'
+  mYTaBlE: 'disable' # skip convention management for this table
   ...
+  other_table:
+    unmanaged_property: 'disable' # skip convention management for this field
 ```
 
 Results in:
