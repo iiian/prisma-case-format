@@ -3,30 +3,21 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { Command, OptionValues } from 'commander';
 import chalk from 'chalk';
-import { snakeCase, camelCase, pascalCase } from 'change-case';
 import { formatSchema } from '@prisma/internals';
-import { ConventionTransformer, CaseChange, MigrateCaseConventionsOptions, getMigrateConventionDefaults } from './convention-transformer';
-import { asPluralized, asSingularized } from './caseConventions';
+import { ConventionTransformer } from './convention-transformer';
+import { ConventionStore, DEFAULT_PRISMA_CASE_FORMAT_FILE_LOCATION, SUPPORTED_CASE_CONVENTIONS_MESSAGE, tryGetTableCaseConvention } from './convention-store';
+import { resolve } from 'path';
 
 const DEFAULT_FILE_LOCATION = 'schema.prisma';
 const program = new Command(`prisma-case-format`);
 
 const VERSION = require('../package.json').version;
-const SUPPORTED_CASE_CONVENTIONS_MESSAGE = `Supported case conventions: ["pascal", "camel", "snake"].
-Additionally, append ',plural' after any case-convention selection to mark case convention as pluralized.
-For instance:
-  --map-table-case=snake,plural
 
-will append \`@@map("users")\` to \`model User\`.
-Append ',singular' after any case-convention selection to mark case convention as singularized.
-For instance, 
-  --map-table-case=snake,singular
-
-will append \`@@map("user")\` to \`model Users\``;
 program
   .description(`Give your schema.prisma sane naming conventions`)
   .addHelpText('after', SUPPORTED_CASE_CONVENTIONS_MESSAGE)
-  .requiredOption('--file <file>', 'cwd-relative path to schema.prisma file', DEFAULT_FILE_LOCATION)
+  .requiredOption('-f, --file <file>', 'cwd-relative path to `schema.prisma` file', DEFAULT_FILE_LOCATION)
+  .option('-c, --config-file <cfgFile>', 'cwd-relative path to `.prisma-case-format` config file', DEFAULT_PRISMA_CASE_FORMAT_FILE_LOCATION)
   .option('-D, --dry-run', 'print changes to console, rather than back to file', false)
   .option('--table-case <tableCase>', 'case convention for table names (SEE BOTTOM)', 'pascal')
   .option('--field-case <fieldCase>', 'case convention for field names', 'camel')
@@ -35,6 +26,7 @@ program
   .option('--map-field-case <mapFieldCase>', 'case convention for @map() annotations')
   .option('--map-enum-case <mapEnumCase>', 'case convention for @map() annotations of enums.  In case of not declared, uses value of “--map-table-case”.')
   .option('-p, --pluralize', 'optionally pluralize array type fields', false)
+  .option('--uses-next-auth', 'guarantee next-auth models (Account, User, Session, etc) uphold their data-contracts')
   .version(VERSION, '', `hint: you have v${VERSION}`)
 ;
 program.parse(process.argv);
@@ -55,7 +47,13 @@ async function run() {
     process.exit(1);
   }
 
-  const convention_options: MigrateCaseConventionsOptions = getMigrateConventionDefaults();
+  const [conv, conv_err] = ConventionStore.fromFile(resolve(options.configFile));
+  if (conv_err) {
+    console.error(chalk.red("Encountered an error while trying to read provided config file at path " + options.convFile));
+    console.error(chalk.red(conv_err.message));
+    process.exit(1);
+  }
+
   if (options.tableCase) {
     let [tableCaseConvention, err] = tryGetTableCaseConvention(options.tableCase);
     if (err) {
@@ -63,7 +61,7 @@ async function run() {
       [tableCaseConvention,] = tryGetTableCaseConvention('pascal');
     }
 
-    convention_options.tableCaseConvention = tableCaseConvention!;
+    conv!.tableCaseConvention = tableCaseConvention!;
   }
 
   if (options.fieldCase) {
@@ -73,7 +71,7 @@ async function run() {
       [fieldCaseConvention,] = tryGetTableCaseConvention('camel');
     }
 
-    convention_options.fieldCaseConvention = fieldCaseConvention!;
+    conv!.fieldCaseConvention = fieldCaseConvention!;
   }
 
   if (options.enumCase) {
@@ -83,7 +81,7 @@ async function run() {
       [caseConvention,] = tryGetTableCaseConvention('pascal');
     }
 
-    convention_options.enumCaseConvention = caseConvention!;
+    conv!.enumCaseConvention = caseConvention!;
   }
 
   if (options.mapTableCase) {
@@ -95,7 +93,7 @@ async function run() {
       program.outputHelp();
       process.exit(1);
     } else {
-      convention_options.mapTableCaseConvention = convention!;
+      conv!.mapTableCaseConvention = convention!;
     }
   }
 
@@ -108,7 +106,7 @@ async function run() {
       program.outputHelp();
       process.exit(1);
     } else {
-      convention_options.mapFieldCaseConvention = convention!;
+      conv!.mapFieldCaseConvention = convention!;
     }
   }
 
@@ -121,13 +119,13 @@ async function run() {
       program.outputHelp();
       process.exit(1);
     } else {
-      convention_options.mapEnumCaseConvention = convention!;
+      conv!.mapEnumCaseConvention = convention!;
     }
   }
 
-  convention_options.pluralize = !!options.pluralize;
+  conv!.pluralize = !!options.pluralize;
 
-  const [schema, schema_error] = ConventionTransformer.migrateCaseConventions(file_contents!, convention_options);
+  const [schema, schema_error] = ConventionTransformer.migrateCaseConventions(file_contents!, conv!);
   if (schema_error) {
     console.error(chalk.red('Encountered error while migrating case conventions'));
     console.error(chalk.red(schema_error));
@@ -152,32 +150,4 @@ export function tryGetFileContents(options: OptionValues): [string?, Error?] {
   } catch (error) {
     return [, error as Error];
   }
-}
-
-export function tryGetTableCaseConvention(raw_type: string): [CaseChange?, Error?] {
-  const [type, case_flavor] = raw_type.split(',');
-  let kase: CaseChange;
-  switch (type) {
-    case 'pascal':
-    kase = pascalCase;
-    break;
-    case 'camel':
-    kase = camelCase;
-    break;
-    case 'snake':
-    kase = snakeCase;
-    break;
-    default: return [, new Error('unsupported case convention: ' + type)];
-  }
-
-  switch (case_flavor) {
-    case 'plural':
-    kase = asPluralized(kase);
-    break;
-    case 'singular':
-    kase = asSingularized(kase);
-    break;
-  }
-
-  return [kase,];
 }

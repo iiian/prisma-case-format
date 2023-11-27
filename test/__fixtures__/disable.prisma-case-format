@@ -1,0 +1,7 @@
+override:
+  mYMoDeL: 'disable'
+  partially_maintained:
+    default: 'table=pascal; mapTable=snake'
+    field:
+      maintained_property: 'field=pascal'
+      unmaintained_property: 'disable'
