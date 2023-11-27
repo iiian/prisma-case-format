@@ -161,7 +161,7 @@ uses_next_auth: false
 
 #### Type: `Field=Dictionary<string, string>`
 
-Controls overrides on a per-table & per-field basis. Each key in `override` & subkey in `field` is allowed to be a regex, in which case it will attempt to match based on the specified pattern. This can be useful if you have several fields with pre or suffixes.
+Controls overrides on a per-model & per-field basis. Works for `models`, `views` and `enums`, in the same scope as the `table`/`field`/`enum` argument groups when running in commandline mode. Each key in `override` & subkey in `field` is allowed to be a regex, in which case it will attempt to match based on the specified pattern. This can be useful if you have several fields with prefixes or suffixes.
 
 ##### Example
 ```yaml
