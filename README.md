@@ -112,7 +112,7 @@ model Example { // <- controlled by `--table-case`
 }
 ```
 
-Table conventions are controlled by the `--table-case` & `--map-table-case` flags. `--table-case` specifies the case convention for the models in the generated prisma client library. `--map-table-case` will manage the database name case convention. **It manages models & views**.
+Table conventions are controlled by the `--table-case` & `--map-table-case` flags. `--table-case` specifies the case convention for the models in the generated prisma client library. `--map-table-case` will manage the database name case convention. **`table` args manage models & views**.
 
 ### `field`
 
@@ -126,7 +126,7 @@ model Example {
 }
 ```
 
-Field conventions are controlled by the `--field-case` & `--map-field-case` flags. `--field-case` specifies the case convention for the fields in models within the generated prisma client library. `--map-field-case`  will manage the case convention for the field in the database. **It does not apply to enum constants**.
+Field conventions are controlled by the `--field-case` & `--map-field-case` flags. `--field-case` specifies the case convention for the fields in models within the generated prisma client library. `--map-field-case`  will manage the case convention for the field in the database. **`field` args do not apply to enums**.
 
 ### `enum`
 
@@ -138,7 +138,7 @@ enum Example { // <- controlled by  --enum-case
 }
 ```
 
-Enum conventions are controlled by the `--enum-case` & `--map-enum-case` flags. `--enum-case` specifies the case convention for the enums in the generated prisma client library. `--map-enum-case` will manage the case  convention for the enum within the database. **It does not apply to enum constants, only enum names**.
+Enum conventions are controlled by the `--enum-case` & `--map-enum-case` flags. `--enum-case` specifies the case convention for the enums in the generated prisma client library. `--map-enum-case` will manage the case  convention for the enum within the database. **`enum` args do not apply to enum values, just the model & database names**.
 
 ## Config file
 `prisma-case-format` supports a config file, which primarily exists as a means to *override* case conventions per model or per field. This can be especially useful if you are coming from an existing database that doesn't have perfect naming convention consistency. For example, some of your model fields are `snake_case`, others are `camelCase`.
