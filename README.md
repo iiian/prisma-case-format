@@ -198,7 +198,7 @@ The `.prisma-case-format` file supports specifying that a particular model or fi
 ```yaml
 default: ...
 override:
-  MyTable: 'disable'
+  mYTaBlE: 'disable'
   ...
 ```
 
