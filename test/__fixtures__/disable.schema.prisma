@@ -1,0 +1,20 @@
+model mYMoDeL {
+  lMfAo String @id @map("ToXiC_DeV_____WaS_HeeeEeEeRe_ayY_lMao")
+  i_h8_ur_company Json
+
+  @@map("so_uncalled_for_dot_gov")
+}
+
+model partially_maintained {
+  id String @id
+
+  maintained_property String
+  unmaintained_property String
+}
+
+model Pristine {
+  id Int @id
+  data String @unique
+  convert_this_pls DateTime
+}
+

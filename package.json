@@ -1,6 +1,6 @@
 {
   "name": "prisma-case-format",
-  "version": "2.0.2",
+  "version": "2.1.0",
   "description": "Give your introspected schema.prisma sane casing conventions",
   "main": "./dist/cli.js",
   "repository": {
@@ -21,6 +21,7 @@
     "@babel/preset-env": "^7.16.11",
     "@babel/preset-typescript": "^7.16.7",
     "@types/jest": "^27.4.0",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^17.0.17",
     "@types/pluralize": "0.0.29",
     "babel-jest": "^27.5.1",
@@ -35,6 +36,7 @@
     "chalk": "^4.0.0",
     "change-case": "4.1.2",
     "commander": "7.2.0",
+    "js-yaml": "4.1.0",
     "pluralize": "8.0.0"
   }
 }
