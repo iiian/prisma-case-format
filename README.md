@@ -191,7 +191,7 @@ model my_table {
 
 #### Disabling case convention management
 
-The `.prisma-case-format` file supports specifying that a particular model or field has its case convention management "disabled". This is achieved by setting the key under `override` or sukey under `field` to `'disable'`.
+The `.prisma-case-format` file supports specifying that a particular model or field has its case convention management "disabled". This is achieved by setting the key under `override` or subkey under `field` to `'disable'`.
 
 ##### Example:
 
