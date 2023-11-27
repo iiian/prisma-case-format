@@ -200,7 +200,7 @@ default: ...
 override:
   mYTaBlE: 'disable' # skip convention management for this table
   ...
-  other_table:
+  YourTable:
     default: '...'
     field:
       unmanaged_property: 'disable' # skip convention management for this field
