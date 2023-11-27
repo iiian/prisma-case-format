@@ -5,15 +5,19 @@
 ## Use Cases
 ### As a one-time migration assistant
 
-Use `--dry-run` to figure out which case conventions are correct for your project. Once things look correct, drop the flag to save changes to the `--file` (or your local `schema.prisma` by default).
+Did `prisma introspect` on your huge database schema mis-case all your tables & fields? Is it wrecking your hope of using duck-types? Use `--dry-run` in combination with `--(map)?-(table|field|enum)-case` to figure out which case conventions are correct for your project. Once things look correct, drop the flag to save changes to the specified `--file`, which is your local root `schema.prisma` by default.
 
-### As a small CI/CD component 
+### As a dedicated linter for your `schema.prisma` 
 
 `prisma-case-format` aims to be idempotent, so you can use it to confirm that case conventions in your `schema.prisma` have not accidentally drifted. `prisma-case-format` can be applied on-commit or on-push, either in a git commit-hook package or as a CI/CD step. Use `--dry-run` to diff changes with the original file, or backup the original and compare to the edit.
 
 ### With `NextAuth.js`
 
 If your team is using `NextAuth.js`, you may have encountered an issue where `prisma-case-format` steam rolls the strict data contract expected by the `NextAuth.js` integration. Specify the  `--uses-next-auth` flag in order to protect your `NextAuth.js` tables from your specified conventions.
+
+### With varying conventions
+
+If you inherited or were forced to produce a database schema that has deviations in case conventions, `prisma-case-format` can ensure these conventions remain stable. See the [config file](#config-file) section below.
 
 ## Usage
 
