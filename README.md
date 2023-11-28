@@ -232,7 +232,7 @@ This property is equivalent to the following configuration:
 ```yaml
 uses_next_auth: false
 default: ...
-overrides:
+override:
   Account:
     default: 'table=pascal; mapTable=pascal;'
     field:
