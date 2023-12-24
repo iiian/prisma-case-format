@@ -1,6 +1,6 @@
 {
   "name": "prisma-case-format",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Give your introspected schema.prisma sane casing conventions",
   "main": "./dist/cli.js",
   "repository": {

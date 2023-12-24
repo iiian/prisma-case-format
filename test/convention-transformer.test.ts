@@ -445,12 +445,34 @@ test('if the entity is marked disabled, formatting is not applied', async () => 
 
 test('if next-auth is marked as in use, those models should be managed separately/consistently', async () => {
   const file_contents = getFixture('next-auth');
-  const [store, store_err] = ConventionStore.fromConf({
-    uses_next_auth: true,
-  });
+  const [store, store_err] = ConventionStore.fromConf({ uses_next_auth: true });
   expect(store_err).toBeFalsy();
   const [schema, err] = ConventionTransformer.migrateCaseConventions(file_contents, store!);
   const result = await formatSchema({ schema: schema! });
   expect(err).toBeFalsy();
+  expect(result).toMatchSnapshot();
+});
+
+test('issue', async () => {
+  const file_contents = getFixture('issue');
+  const [store, store_err] = ConventionStore.fromConf({
+    uses_next_auth: true
+  });
+  expect(store_err).toBeFalsy();
+  const [schema, err] = ConventionTransformer.migrateCaseConventions(file_contents, store!);
+  expect(err).toBeFalsy();
+  const result = await formatSchema({ schema: schema! });
+  expect(result).toMatchSnapshot();
+});
+
+test('issue2', async () => {
+  const file_contents = getFixture('issue2');
+  const [store, store_err] = ConventionStore.fromConf({
+    uses_next_auth: true
+  });
+  expect(store_err).toBeFalsy();
+  const [schema, err] = ConventionTransformer.migrateCaseConventions(file_contents, store!);
+  expect(err).toBeFalsy();
+  const result = await formatSchema({ schema: schema! });
   expect(result).toMatchSnapshot();
 });

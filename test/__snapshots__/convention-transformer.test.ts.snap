@@ -80,6 +80,42 @@ model Pristine {
 "
 `;
 
+exports[`issue 1`] = `
+"model Sessions {
+  sessionId String  @id @map(\\"session_id\\") @localContainer.VarChar(128)
+  expires   Int     @localContainer.UnsignedInt
+  data      String? @localContainer.Text
+
+  @@map(\\"sessions\\")
+}
+"
+`;
+
+exports[`issue2 1`] = `
+"model Account {
+  id                 String    @id @default(cuid())
+  userId             String
+  providerType       String    @map(\\"provider_type\\")
+  providerId         String    @map(\\"provider_id\\")
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  accessTokenExpires DateTime? @map(\\"access_token_expires\\")
+  createdAt          DateTime  @default(now()) @map(\\"created_at\\")
+  updatedAt          DateTime  @updatedAt @map(\\"updated_at\\")
+  user               User      @relation(fields: [userId], references: [id])
+
+  @@unique([providerId, providerAccountId])
+  @@map(\\"account\\")
+}
+
+model User {
+  id       String    @id
+  accounts Account[]
+}
+"
+`;
+
 exports[`it can enforce a specified case convention on all fields of all tables (camelCase): camelCase 1`] = `
 "datasource db {
   provider = \\"sqlite\\"

@@ -254,7 +254,7 @@ export class ConventionStore {
 
     const haystack = this.children ?? {};
     for (const key in haystack) {
-      const regex = new RegExp(key);
+      const regex = new RegExp('$' + key + '^');
       if (regex.test(next)) {
         return this.children![key]._recurse(k, rest);
       }
