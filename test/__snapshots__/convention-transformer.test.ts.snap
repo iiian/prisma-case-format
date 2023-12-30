@@ -3,9 +3,9 @@
 exports[`if next-auth is marked as in use, those models should be managed separately/consistently 1`] = `
 "model MyModel {
   id        String @id @default(uuid())
-  dataField String @map(\\"data_field\\")
+  dataField String @map("data_field")
 
-  @@map(\\"my_model\\")
+  @@map("my_model")
 }
 
 model Account {
@@ -55,40 +55,97 @@ model VerificationToken {
 "
 `;
 
-exports[`if the entity is marked disabled, formatting is not applied 1`] = `
+exports[`if the entity is marked disabled, or is marked with !, formatting is applied specially 1`] = `
 "model mYMoDeL {
-  lMfAo           String @id @map(\\"ToXiC_DeV_____WaS_HeeeEeEeRe_ayY_lMao\\")
+  lMfAo           String @id @map("ToXiC_DeV_____WaS_HeeeEeEeRe_ayY_lMao")
   i_h8_ur_company Json
 
-  @@map(\\"so_uncalled_for_dot_gov\\")
+  @@map("so_uncalled_for_dot_gov")
 }
 
 model PartiallyMaintained {
   id String @id
 
-  MaintainedProperty    String @map(\\"maintained_property\\")
+  MaintainedProperty    String @map("maintained_property")
   unmaintained_property String
+  divergentConvention   Int    @map("SeeItsACompletelyDifferentName")
 
-  @@map(\\"partially_maintained\\")
+  @@map("partially_maintained")
 }
 
 model Pristine {
   id             Int      @id
   data           String   @unique
-  convertThisPls DateTime @map(\\"convert_this_pls\\")
+  convertThisPls DateTime @map("convert_this_pls")
+}
+
+model AmazingModel {
+  id   Int    @id
+  fuzz String @map("fizz_buzz")
+
+  @@map("Amaze_o")
+}
+
+enum Taxis {
+  Yellow
+  Uber
+
+  @@map("Cabs")
+}
+
+enum Taxes {
+  TaxCode1
+  TaxCode2
+
+  @@map("tax_codes")
+}
+"
+`;
+
+exports[`issue 1`] = `
+"model Sessions {
+  sessionId String  @id @map("session_id") @localContainer.VarChar(128)
+  expires   Int     @localContainer.UnsignedInt
+  data      String? @localContainer.Text
+
+  @@map("sessions")
+}
+"
+`;
+
+exports[`issue2 1`] = `
+"model Account {
+  id                 String    @id @default(cuid())
+  userId             String
+  providerType       String    @map("provider_type")
+  providerId         String    @map("provider_id")
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  accessTokenExpires DateTime? @map("access_token_expires")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+  user               User      @relation(fields: [userId], references: [id])
+
+  @@unique([providerId, providerAccountId])
+}
+
+model User {
+  id       String    @id
+  accounts Account[]
 }
 "
 `;
 
 exports[`it can enforce a specified case convention on all fields of all tables (camelCase): camelCase 1`] = `
 "datasource db {
-  provider = \\"sqlite\\"
-  url      = \\"file:database.db\\"
+  provider = "sqlite"
+  url      = "file:database.db"
 }
 
 // generator
 generator client {
-  provider = \\"prisma-client-js\\"
+  provider = "prisma-client-js"
 }
 
 model DemoIt {
@@ -100,12 +157,12 @@ model DemoIt {
 
 exports[`it can enforce a specified case convention on all fields of all tables (camelCase): camelCase 2`] = `
 "datasource db {
-  provider = \\"postgresql\\"
-  url      = env(\\"DATABASE_URL\\")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
-  provider = \\"prisma-client-js\\"
+  provider = "prisma-client-js"
 }
 
 model Projects {
@@ -113,16 +170,16 @@ model Projects {
   name       String?      @db.VarChar
   jiraIssues JiraIssues[]
 
-  @@map(\\"projects\\")
+  @@map("projects")
 }
 
 model JiraIssues {
   id                Int       @id @default(autoincrement())
   jiraIntegrationId Int?
   projectId         Int
-  projects          Projects? @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: \\"jira_issues_projects_fkey\\")
+  projects          Projects? @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "jira_issues_projects_fkey")
 
-  @@map(\\"jira_issues\\")
+  @@map("jira_issues")
 }
 
 model FieldKey {
@@ -132,23 +189,23 @@ model FieldKey {
   form   Form   @relation(references: [id], fields: [formId], onDelete: Cascade)
 
   @@id([key, formId])
-  @@map(\\"field_key\\")
+  @@map("field_key")
 }
 "
 `;
 
 exports[`it can enforce a specified case convention on all fields of all tables (camelCase): camelCase 3`] = `
 "datasource db {
-  provider = \\"sqlite\\"
-  url      = env(\\"DATABASE_URL\\")
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
-  provider = \\"prisma-client-js\\"
+  provider = "prisma-client-js"
 }
 
 model Business {
-  id                 String               @id(map: \\"BusinessId\\") @default(dbgenerated(\\"gen_random_uuid()\\")) @db.Uuid
+  id                 String               @id(map: "BusinessId") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   languageCode       String               @db.Char(2)
   currencyCode       String               @db.Char(3)
   createdAt          DateTime             @default(now()) @db.Timestamptz(0)
@@ -163,8 +220,8 @@ model Business {
   defaultTaxRate     Decimal?             @db.Decimal(8, 6)
   isActive           Boolean              @default(true)
   batchOperation     BatchOperation[]
-  currency           Currency             @relation(fields: [currencyCode], references: [code], onUpdate: Restrict, map: \\"BusinessCurrency\\")
-  language           Language             @relation(fields: [languageCode], references: [code], onUpdate: Restrict, map: \\"BusinessLanguage\\")
+  currency           Currency             @relation(fields: [currencyCode], references: [code], onUpdate: Restrict, map: "BusinessCurrency")
+  language           Language             @relation(fields: [languageCode], references: [code], onUpdate: Restrict, map: "BusinessLanguage")
   ingredientCategory IngredientCategory[]
   itemCategory       ItemCategory[]
   optionCategory     OptionCategory[]
@@ -173,96 +230,96 @@ model Business {
   tab                Tab[]
   targetGroup        TargetGroup[]
 
-  @@schema(\\"public\\")
+  @@schema("public")
 }
 "
 `;
 
 exports[`it can enforce a specified case convention on all fields of all tables (pascalCase): pascalCase 1`] = `
 "datasource db {
-  provider = \\"sqlite\\"
-  url      = \\"file:database.db\\"
+  provider = "sqlite"
+  url      = "file:database.db"
 }
 
 // generator
 generator client {
-  provider = \\"prisma-client-js\\"
+  provider = "prisma-client-js"
 }
 
 model DemoIt {
-  id        Int    @id @map(\\"Id\\")
-  dataField String @map(\\"DataField\\")
+  id        Int    @id @map("Id")
+  dataField String @map("DataField")
 }
 "
 `;
 
 exports[`it can enforce a specified case convention on all fields of all tables (pascalCase): pascalCase 2`] = `
 "datasource db {
-  provider = \\"postgresql\\"
-  url      = env(\\"DATABASE_URL\\")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
-  provider = \\"prisma-client-js\\"
+  provider = "prisma-client-js"
 }
 
 model Projects {
-  id         Int          @id @default(autoincrement()) @map(\\"Id\\")
-  name       String?      @map(\\"Name\\") @db.VarChar
+  id         Int          @id @default(autoincrement()) @map("Id")
+  name       String?      @map("Name") @db.VarChar
   jiraIssues JiraIssues[]
 
-  @@map(\\"projects\\")
+  @@map("projects")
 }
 
 model JiraIssues {
-  id                Int       @id @default(autoincrement()) @map(\\"Id\\")
-  jiraIntegrationId Int?      @map(\\"JiraIntegrationId\\")
-  projectId         Int       @map(\\"ProjectId\\")
-  projects          Projects? @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: \\"jira_issues_projects_fkey\\")
+  id                Int       @id @default(autoincrement()) @map("Id")
+  jiraIntegrationId Int?      @map("JiraIntegrationId")
+  projectId         Int       @map("ProjectId")
+  projects          Projects? @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "jira_issues_projects_fkey")
 
-  @@map(\\"jira_issues\\")
+  @@map("jira_issues")
 }
 
 model FieldKey {
-  key    String @map(\\"Key\\")
-  type   String @map(\\"Type\\") // str, num, bool
-  formId String @map(\\"FormId\\") @db.Uuid
+  key    String @map("Key")
+  type   String @map("Type") // str, num, bool
+  formId String @map("FormId") @db.Uuid
   form   Form   @relation(references: [id], fields: [formId], onDelete: Cascade)
 
   @@id([key, formId])
-  @@map(\\"field_key\\")
+  @@map("field_key")
 }
 "
 `;
 
 exports[`it can enforce a specified case convention on all fields of all tables (pascalCase): pascalCase 3`] = `
 "datasource db {
-  provider = \\"sqlite\\"
-  url      = env(\\"DATABASE_URL\\")
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
-  provider = \\"prisma-client-js\\"
+  provider = "prisma-client-js"
 }
 
 model Business {
-  id                 String               @id(map: \\"BusinessId\\") @default(dbgenerated(\\"gen_random_uuid()\\")) @map(\\"Id\\") @db.Uuid
-  languageCode       String               @map(\\"LanguageCode\\") @db.Char(2)
-  currencyCode       String               @map(\\"CurrencyCode\\") @db.Char(3)
-  createdAt          DateTime             @default(now()) @map(\\"CreatedAt\\") @db.Timestamptz(0)
-  name               String               @map(\\"Name\\") @db.VarChar(64)
-  language           String[]             @default([]) @map(\\"Language\\") @db.Char(2)
-  phone              String               @map(\\"Phone\\") @db.VarChar(15)
-  address            String?              @map(\\"Address\\") @db.VarChar(250)
-  billingName        String?              @map(\\"BillingName\\") @db.VarChar(64)
-  billingAddress     String?              @map(\\"BillingAddress\\") @db.VarChar(250)
-  taxOffice          String?              @map(\\"TaxOffice\\") @db.VarChar(64)
-  taxId              String?              @map(\\"TaxId\\") @db.VarChar(64)
-  defaultTaxRate     Decimal?             @map(\\"DefaultTaxRate\\") @db.Decimal(8, 6)
-  isActive           Boolean              @default(true) @map(\\"IsActive\\")
+  id                 String               @id(map: "BusinessId") @default(dbgenerated("gen_random_uuid()")) @map("Id") @db.Uuid
+  languageCode       String               @map("LanguageCode") @db.Char(2)
+  currencyCode       String               @map("CurrencyCode") @db.Char(3)
+  createdAt          DateTime             @default(now()) @map("CreatedAt") @db.Timestamptz(0)
+  name               String               @map("Name") @db.VarChar(64)
+  language           String[]             @default([]) @map("Language") @db.Char(2)
+  phone              String               @map("Phone") @db.VarChar(15)
+  address            String?              @map("Address") @db.VarChar(250)
+  billingName        String?              @map("BillingName") @db.VarChar(64)
+  billingAddress     String?              @map("BillingAddress") @db.VarChar(250)
+  taxOffice          String?              @map("TaxOffice") @db.VarChar(64)
+  taxId              String?              @map("TaxId") @db.VarChar(64)
+  defaultTaxRate     Decimal?             @map("DefaultTaxRate") @db.Decimal(8, 6)
+  isActive           Boolean              @default(true) @map("IsActive")
   batchOperation     BatchOperation[]
-  currency           Currency             @relation(fields: [currencyCode], references: [code], onUpdate: Restrict, map: \\"BusinessCurrency\\")
-  language           Language             @relation(fields: [languageCode], references: [code], onUpdate: Restrict, map: \\"BusinessLanguage\\")
+  currency           Currency             @relation(fields: [currencyCode], references: [code], onUpdate: Restrict, map: "BusinessCurrency")
+  language           Language             @relation(fields: [languageCode], references: [code], onUpdate: Restrict, map: "BusinessLanguage")
   ingredientCategory IngredientCategory[]
   itemCategory       ItemCategory[]
   optionCategory     OptionCategory[]
@@ -271,37 +328,37 @@ model Business {
   tab                Tab[]
   targetGroup        TargetGroup[]
 
-  @@schema(\\"public\\")
+  @@schema("public")
 }
 "
 `;
 
 exports[`it can enforce a specified case convention on all fields of all tables (snakeCase): snakeCase 1`] = `
 "datasource db {
-  provider = \\"sqlite\\"
-  url      = \\"file:database.db\\"
+  provider = "sqlite"
+  url      = "file:database.db"
 }
 
 // generator
 generator client {
-  provider = \\"prisma-client-js\\"
+  provider = "prisma-client-js"
 }
 
 model DemoIt {
   id        Int    @id
-  dataField String @map(\\"data_field\\")
+  dataField String @map("data_field")
 }
 "
 `;
 
 exports[`it can enforce a specified case convention on all fields of all tables (snakeCase): snakeCase 2`] = `
 "datasource db {
-  provider = \\"postgresql\\"
-  url      = env(\\"DATABASE_URL\\")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
-  provider = \\"prisma-client-js\\"
+  provider = "prisma-client-js"
 }
 
 model Projects {
@@ -309,58 +366,58 @@ model Projects {
   name       String?      @db.VarChar
   jiraIssues JiraIssues[]
 
-  @@map(\\"projects\\")
+  @@map("projects")
 }
 
 model JiraIssues {
   id                Int       @id @default(autoincrement())
-  jiraIntegrationId Int?      @map(\\"jira_integration_id\\")
-  projectId         Int       @map(\\"project_id\\")
-  projects          Projects? @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: \\"jira_issues_projects_fkey\\")
+  jiraIntegrationId Int?      @map("jira_integration_id")
+  projectId         Int       @map("project_id")
+  projects          Projects? @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "jira_issues_projects_fkey")
 
-  @@map(\\"jira_issues\\")
+  @@map("jira_issues")
 }
 
 model FieldKey {
   key    String
   type   String // str, num, bool
-  formId String @map(\\"form_id\\") @db.Uuid
+  formId String @map("form_id") @db.Uuid
   form   Form   @relation(references: [id], fields: [formId], onDelete: Cascade)
 
   @@id([key, formId])
-  @@map(\\"field_key\\")
+  @@map("field_key")
 }
 "
 `;
 
 exports[`it can enforce a specified case convention on all fields of all tables (snakeCase): snakeCase 3`] = `
 "datasource db {
-  provider = \\"sqlite\\"
-  url      = env(\\"DATABASE_URL\\")
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
-  provider = \\"prisma-client-js\\"
+  provider = "prisma-client-js"
 }
 
 model Business {
-  id                 String               @id(map: \\"BusinessId\\") @default(dbgenerated(\\"gen_random_uuid()\\")) @db.Uuid
-  languageCode       String               @map(\\"language_code\\") @db.Char(2)
-  currencyCode       String               @map(\\"currency_code\\") @db.Char(3)
-  createdAt          DateTime             @default(now()) @map(\\"created_at\\") @db.Timestamptz(0)
+  id                 String               @id(map: "BusinessId") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  languageCode       String               @map("language_code") @db.Char(2)
+  currencyCode       String               @map("currency_code") @db.Char(3)
+  createdAt          DateTime             @default(now()) @map("created_at") @db.Timestamptz(0)
   name               String               @db.VarChar(64)
   language           String[]             @default([]) @db.Char(2)
   phone              String               @db.VarChar(15)
   address            String?              @db.VarChar(250)
-  billingName        String?              @map(\\"billing_name\\") @db.VarChar(64)
-  billingAddress     String?              @map(\\"billing_address\\") @db.VarChar(250)
-  taxOffice          String?              @map(\\"tax_office\\") @db.VarChar(64)
-  taxId              String?              @map(\\"tax_id\\") @db.VarChar(64)
-  defaultTaxRate     Decimal?             @map(\\"default_tax_rate\\") @db.Decimal(8, 6)
-  isActive           Boolean              @default(true) @map(\\"is_active\\")
+  billingName        String?              @map("billing_name") @db.VarChar(64)
+  billingAddress     String?              @map("billing_address") @db.VarChar(250)
+  taxOffice          String?              @map("tax_office") @db.VarChar(64)
+  taxId              String?              @map("tax_id") @db.VarChar(64)
+  defaultTaxRate     Decimal?             @map("default_tax_rate") @db.Decimal(8, 6)
+  isActive           Boolean              @default(true) @map("is_active")
   batchOperation     BatchOperation[]
-  currency           Currency             @relation(fields: [currencyCode], references: [code], onUpdate: Restrict, map: \\"BusinessCurrency\\")
-  language           Language             @relation(fields: [languageCode], references: [code], onUpdate: Restrict, map: \\"BusinessLanguage\\")
+  currency           Currency             @relation(fields: [currencyCode], references: [code], onUpdate: Restrict, map: "BusinessCurrency")
+  language           Language             @relation(fields: [languageCode], references: [code], onUpdate: Restrict, map: "BusinessLanguage")
   ingredientCategory IngredientCategory[]
   itemCategory       ItemCategory[]
   optionCategory     OptionCategory[]
@@ -369,39 +426,39 @@ model Business {
   tab                Tab[]
   targetGroup        TargetGroup[]
 
-  @@schema(\\"public\\")
+  @@schema("public")
 }
 "
 `;
 
 exports[`it can enforce a specified case convention on all table names (camelCase): camelCase 1`] = `
 "datasource db {
-  provider = \\"sqlite\\"
-  url      = \\"file:database.db\\"
+  provider = "sqlite"
+  url      = "file:database.db"
 }
 
 // generator
 generator client {
-  provider = \\"prisma-client-js\\"
+  provider = "prisma-client-js"
 }
 
 model DemoIt {
   id        Int    @id
-  dataField String @map(\\"data_field\\")
+  dataField String @map("data_field")
 
-  @@map(\\"demoIt\\")
+  @@map("demoIt")
 }
 "
 `;
 
 exports[`it can enforce a specified case convention on all table names (camelCase): camelCase 2`] = `
 "datasource db {
-  provider = \\"postgresql\\"
-  url      = env(\\"DATABASE_URL\\")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
-  provider = \\"prisma-client-js\\"
+  provider = "prisma-client-js"
 }
 
 model Projects {
@@ -409,42 +466,42 @@ model Projects {
   name       String?      @db.VarChar
   jiraIssues JiraIssues[]
 
-  @@map(\\"projects\\")
+  @@map("projects")
 }
 
 model JiraIssues {
   id                Int       @id @default(autoincrement())
-  jiraIntegrationId Int?      @map(\\"jira_integration_id\\")
-  projectId         Int       @map(\\"project_id\\")
-  projects          Projects? @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: \\"jira_issues_projects_fkey\\")
+  jiraIntegrationId Int?      @map("jira_integration_id")
+  projectId         Int       @map("project_id")
+  projects          Projects? @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "jira_issues_projects_fkey")
 
-  @@map(\\"jiraIssues\\")
+  @@map("jiraIssues")
 }
 
 model FieldKey {
   key    String
   type   String // str, num, bool
-  formId String @map(\\"form_id\\") @db.Uuid
+  formId String @map("form_id") @db.Uuid
   form   Form   @relation(references: [id], fields: [formId], onDelete: Cascade)
 
   @@id([key, formId])
-  @@map(\\"fieldKey\\")
+  @@map("fieldKey")
 }
 "
 `;
 
 exports[`it can enforce a specified case convention on all table names (camelCase): camelCase 3`] = `
 "datasource db {
-  provider = \\"sqlite\\"
-  url      = env(\\"DATABASE_URL\\")
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
-  provider = \\"prisma-client-js\\"
+  provider = "prisma-client-js"
 }
 
 model Business {
-  id                 String               @id(map: \\"BusinessId\\") @default(dbgenerated(\\"gen_random_uuid()\\")) @db.Uuid
+  id                 String               @id(map: "BusinessId") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   languageCode       String               @db.Char(2)
   currencyCode       String               @db.Char(3)
   createdAt          DateTime             @default(now()) @db.Timestamptz(0)
@@ -459,8 +516,8 @@ model Business {
   defaultTaxRate     Decimal?             @db.Decimal(8, 6)
   isActive           Boolean              @default(true)
   batchOperation     BatchOperation[]
-  currency           Currency             @relation(fields: [currencyCode], references: [code], onUpdate: Restrict, map: \\"BusinessCurrency\\")
-  language           Language             @relation(fields: [languageCode], references: [code], onUpdate: Restrict, map: \\"BusinessLanguage\\")
+  currency           Currency             @relation(fields: [currencyCode], references: [code], onUpdate: Restrict, map: "BusinessCurrency")
+  language           Language             @relation(fields: [languageCode], references: [code], onUpdate: Restrict, map: "BusinessLanguage")
   ingredientCategory IngredientCategory[]
   itemCategory       ItemCategory[]
   optionCategory     OptionCategory[]
@@ -469,38 +526,38 @@ model Business {
   tab                Tab[]
   targetGroup        TargetGroup[]
 
-  @@map(\\"business\\")
-  @@schema(\\"public\\")
+  @@map("business")
+  @@schema("public")
 }
 "
 `;
 
 exports[`it can enforce a specified case convention on all table names (pascalCase): pascalCase 1`] = `
 "datasource db {
-  provider = \\"sqlite\\"
-  url      = \\"file:database.db\\"
+  provider = "sqlite"
+  url      = "file:database.db"
 }
 
 // generator
 generator client {
-  provider = \\"prisma-client-js\\"
+  provider = "prisma-client-js"
 }
 
 model DemoIt {
   id        Int    @id
-  dataField String @map(\\"data_field\\")
+  dataField String @map("data_field")
 }
 "
 `;
 
 exports[`it can enforce a specified case convention on all table names (pascalCase): pascalCase 2`] = `
 "datasource db {
-  provider = \\"postgresql\\"
-  url      = env(\\"DATABASE_URL\\")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
-  provider = \\"prisma-client-js\\"
+  provider = "prisma-client-js"
 }
 
 model Projects {
@@ -511,15 +568,15 @@ model Projects {
 
 model JiraIssues {
   id                Int       @id @default(autoincrement())
-  jiraIntegrationId Int?      @map(\\"jira_integration_id\\")
-  projectId         Int       @map(\\"project_id\\")
-  projects          Projects? @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: \\"jira_issues_projects_fkey\\")
+  jiraIntegrationId Int?      @map("jira_integration_id")
+  projectId         Int       @map("project_id")
+  projects          Projects? @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "jira_issues_projects_fkey")
 }
 
 model FieldKey {
   key    String
   type   String // str, num, bool
-  formId String @map(\\"form_id\\") @db.Uuid
+  formId String @map("form_id") @db.Uuid
   form   Form   @relation(references: [id], fields: [formId], onDelete: Cascade)
 
   @@id([key, formId])
@@ -529,16 +586,16 @@ model FieldKey {
 
 exports[`it can enforce a specified case convention on all table names (pascalCase): pascalCase 3`] = `
 "datasource db {
-  provider = \\"sqlite\\"
-  url      = env(\\"DATABASE_URL\\")
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
-  provider = \\"prisma-client-js\\"
+  provider = "prisma-client-js"
 }
 
 model Business {
-  id                 String               @id(map: \\"BusinessId\\") @default(dbgenerated(\\"gen_random_uuid()\\")) @db.Uuid
+  id                 String               @id(map: "BusinessId") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   languageCode       String               @db.Char(2)
   currencyCode       String               @db.Char(3)
   createdAt          DateTime             @default(now()) @db.Timestamptz(0)
@@ -553,8 +610,8 @@ model Business {
   defaultTaxRate     Decimal?             @db.Decimal(8, 6)
   isActive           Boolean              @default(true)
   batchOperation     BatchOperation[]
-  currency           Currency             @relation(fields: [currencyCode], references: [code], onUpdate: Restrict, map: \\"BusinessCurrency\\")
-  language           Language             @relation(fields: [languageCode], references: [code], onUpdate: Restrict, map: \\"BusinessLanguage\\")
+  currency           Currency             @relation(fields: [currencyCode], references: [code], onUpdate: Restrict, map: "BusinessCurrency")
+  language           Language             @relation(fields: [languageCode], references: [code], onUpdate: Restrict, map: "BusinessLanguage")
   ingredientCategory IngredientCategory[]
   itemCategory       ItemCategory[]
   optionCategory     OptionCategory[]
@@ -563,39 +620,39 @@ model Business {
   tab                Tab[]
   targetGroup        TargetGroup[]
 
-  @@schema(\\"public\\")
+  @@schema("public")
 }
 "
 `;
 
 exports[`it can enforce a specified case convention on all table names (snakeCase): snakeCase 1`] = `
 "datasource db {
-  provider = \\"sqlite\\"
-  url      = \\"file:database.db\\"
+  provider = "sqlite"
+  url      = "file:database.db"
 }
 
 // generator
 generator client {
-  provider = \\"prisma-client-js\\"
+  provider = "prisma-client-js"
 }
 
 model DemoIt {
   id        Int    @id
-  dataField String @map(\\"data_field\\")
+  dataField String @map("data_field")
 
-  @@map(\\"demo_it\\")
+  @@map("demo_it")
 }
 "
 `;
 
 exports[`it can enforce a specified case convention on all table names (snakeCase): snakeCase 2`] = `
 "datasource db {
-  provider = \\"postgresql\\"
-  url      = env(\\"DATABASE_URL\\")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
-  provider = \\"prisma-client-js\\"
+  provider = "prisma-client-js"
 }
 
 model Projects {
@@ -603,42 +660,42 @@ model Projects {
   name       String?      @db.VarChar
   jiraIssues JiraIssues[]
 
-  @@map(\\"projects\\")
+  @@map("projects")
 }
 
 model JiraIssues {
   id                Int       @id @default(autoincrement())
-  jiraIntegrationId Int?      @map(\\"jira_integration_id\\")
-  projectId         Int       @map(\\"project_id\\")
-  projects          Projects? @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: \\"jira_issues_projects_fkey\\")
+  jiraIntegrationId Int?      @map("jira_integration_id")
+  projectId         Int       @map("project_id")
+  projects          Projects? @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "jira_issues_projects_fkey")
 
-  @@map(\\"jira_issues\\")
+  @@map("jira_issues")
 }
 
 model FieldKey {
   key    String
   type   String // str, num, bool
-  formId String @map(\\"form_id\\") @db.Uuid
+  formId String @map("form_id") @db.Uuid
   form   Form   @relation(references: [id], fields: [formId], onDelete: Cascade)
 
   @@id([key, formId])
-  @@map(\\"field_key\\")
+  @@map("field_key")
 }
 "
 `;
 
 exports[`it can enforce a specified case convention on all table names (snakeCase): snakeCase 3`] = `
 "datasource db {
-  provider = \\"sqlite\\"
-  url      = env(\\"DATABASE_URL\\")
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
-  provider = \\"prisma-client-js\\"
+  provider = "prisma-client-js"
 }
 
 model Business {
-  id                 String               @id(map: \\"BusinessId\\") @default(dbgenerated(\\"gen_random_uuid()\\")) @db.Uuid
+  id                 String               @id(map: "BusinessId") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   languageCode       String               @db.Char(2)
   currencyCode       String               @db.Char(3)
   createdAt          DateTime             @default(now()) @db.Timestamptz(0)
@@ -653,8 +710,8 @@ model Business {
   defaultTaxRate     Decimal?             @db.Decimal(8, 6)
   isActive           Boolean              @default(true)
   batchOperation     BatchOperation[]
-  currency           Currency             @relation(fields: [currencyCode], references: [code], onUpdate: Restrict, map: \\"BusinessCurrency\\")
-  language           Language             @relation(fields: [languageCode], references: [code], onUpdate: Restrict, map: \\"BusinessLanguage\\")
+  currency           Currency             @relation(fields: [currencyCode], references: [code], onUpdate: Restrict, map: "BusinessCurrency")
+  language           Language             @relation(fields: [languageCode], references: [code], onUpdate: Restrict, map: "BusinessLanguage")
   ingredientCategory IngredientCategory[]
   itemCategory       ItemCategory[]
   optionCategory     OptionCategory[]
@@ -663,82 +720,82 @@ model Business {
   tab                Tab[]
   targetGroup        TargetGroup[]
 
-  @@map(\\"business\\")
-  @@schema(\\"public\\")
+  @@map("business")
+  @@schema("public")
 }
 "
 `;
 
 exports[`it can enforce a specified case convention on views 1`] = `
 "generator client {
-  provider        = \\"prisma-client-js\\"
-  output          = \\"../node_modules/@generated/read\\"
-  previewFeatures = [\\"views\\"]
+  provider        = "prisma-client-js"
+  output          = "../node_modules/@generated/read"
+  previewFeatures = ["views"]
 }
 
 generator typegraphql {
-  provider = \\"typegraphql-prisma\\"
+  provider = "typegraphql-prisma"
 }
 
 datasource db {
-  provider = \\"postgres\\"
-  url      = env(\\"DB_URL\\")
+  provider = "postgres"
+  url      = env("DB_URL")
 }
 
 model GooseDbVersion {
   id          Int                    @id @default(autoincrement())
-  versionId   BigInt                 @map(\\"version_id\\")
-  isApplied   Boolean                @map(\\"is_applied\\")
+  versionId   BigInt                 @map("version_id")
+  isApplied   Boolean                @map("is_applied")
   tstamp      DateTime?              @default(now()) @db.Timestamp(6)
-  circleValue Unsupported(\\"circle\\")? @map(\\"circle_value\\")
+  circleValue Unsupported("circle")? @map("circle_value")
 
-  @@map(\\"goose_db_version\\")
+  @@map("goose_db_version")
 }
 
 view Accounts {
   id        String    @unique @db.Uuid
-  createdAt DateTime? @map(\\"created_at\\") @db.Timestamp(6)
+  createdAt DateTime? @map("created_at") @db.Timestamp(6)
   name      String?
-  updatedAt DateTime? @map(\\"updated_at\\") @db.Timestamp(6)
-  ownedBy   String?   @map(\\"owned_by\\") @db.Uuid
+  updatedAt DateTime? @map("updated_at") @db.Timestamp(6)
+  ownedBy   String?   @map("owned_by") @db.Uuid
   users     User[]
 
-  @@map(\\"accounts\\")
+  @@map("accounts")
 }
 
 model User {
   id         String    @id
   name       String
   accounts   Accounts? @relation(fields: [accountsId], references: [id])
-  accountsId String?   @map(\\"accounts_id\\") @db.Uuid
+  accountsId String?   @map("accounts_id") @db.Uuid
 
-  @@map(\\"user\\")
+  @@map("user")
 }
 "
 `;
 
 exports[`it can map ...horrendous indexes that make your head hurt for these people 1`] = `
 "datasource db {
-  provider = \\"mysql\\"
-  url      = \\"file:database.db\\"
+  provider = "mysql"
+  url      = "file:database.db"
 }
 
 // generator
 generator client {
-  provider = \\"prisma-client-js\\"
+  provider = "prisma-client-js"
 }
 
 model Post {
-  @@map(\\"post\\")
+  @@map("post")
   id      Int     @id @default(autoincrement())
-  titlePain   String @map(\\"title_pain\\")
-  contentHash String? @map(\\"content_hash\\")
+  titlePain   String @map("title_pain")
+  contentHash String? @map("content_hash")
 
-  @@index(fields: [titlePain, contentHash(length: 12)], name: \\"main_index\\")
+  @@index(fields: [titlePain, contentHash(length: 12)], name: "main_index")
 }
 
 model Address {
-  @@map(\\"address\\")
+  @@map("address")
   id     Int    @id
   street String
   number Int
@@ -746,40 +803,40 @@ model Address {
 }
 
 model User {
-  @@map(\\"user\\")
+  @@map("user")
   id        Int     @id
   email     String
   address   Address @relation(fields: [addressId], references: [id])
-  addressId Int @map(\\"address_id\\")
+  addressId Int @map("address_id")
 
-  @@index([addressId], map: \\"an_index_name\\")
+  @@index([addressId], map: "an_index_name")
 }
 "
 `;
 
 exports[`it can map enum column to enum definition 1`] = `
 "datasource db {
-  provider = \\"mysql\\"
-  url      = env(\\"DATABASE_URL\\")
+  provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
-  provider = \\"prisma-client-js\\"
+  provider = "prisma-client-js"
 }
 
 model Posts {
   id        Int      @id @default(autoincrement())
   content   String?  @db.VarChar(245)
-  post_type PostType @map(\\"postType\\")
+  post_type PostType @map("postType")
 
-  @@map(\\"posts\\")
+  @@map("posts")
 }
 
 enum PostType {
   Note
   Question
 
-  @@map(\\"post_type\\")
+  @@map("post_type")
 }
 
 enum SnaggleFlark {
@@ -787,7 +844,7 @@ enum SnaggleFlark {
   buz
   bazz
 
-  @@map(\\"snaggle_flark\\")
+  @@map("snaggle_flark")
 }
 
 enum AppleColors {
@@ -802,32 +859,32 @@ exports[`it can rename enum in the database 1`] = `
   fr_FR
   en_EN
 
-  @@map(\\"user_locale\\")
+  @@map("user_locale")
 }
 
 model User {
   id        Int        @id @default(autoincrement())
   email     String     @unique
-  firstName String     @default(\\"\\") @map(\\"first_name\\")
-  lastName  String     @default(\\"\\") @map(\\"last_name\\")
+  firstName String     @default("") @map("first_name")
+  lastName  String     @default("") @map("last_name")
   locale    UserLocale @default(fr_FR)
 
-  @@map(\\"user\\")
+  @@map("user")
 }
 "
 `;
 
 exports[`the readme demo should work 1`] = `
 "model HouseRating {
-  @@map(\\"house_rating\\")
-  Id       Int @map(\\"id\\")    @id @default(autoincrement())
-  HouseId String @map(\\"house_id\\")
+  @@map("house_rating")
+  Id       Int @map("id")    @id @default(autoincrement())
+  HouseId String @map("house_id")
   House    House  @relation(fields: [HouseId], references: [Id])
 }
 
 model House {
-  @@map(\\"house\\")
-  Id           String @map(\\"id\\")         @id @default(uuid()) // comments
+  @@map("house")
+  Id           String @map("id")         @id @default(uuid()) // comments
   HouseRating HouseRating[] // do comments get
 }
 "

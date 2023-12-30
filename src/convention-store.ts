@@ -79,7 +79,7 @@ export class ConventionStore {
   public static fromFile(path: string, usesNextAuth?: boolean): [ConventionStore?, Error?] {
     if (!existsSync(path)) {
       if (path === resolve(DEFAULT_PRISMA_CASE_FORMAT_FILE_LOCATION)) { 
-        return ConventionStore.fromConf({ uses_next_auth: true });
+        return ConventionStore.fromConf({});
       }
       return [, new Error('file does not exist:  ' + path)]
     }
@@ -100,7 +100,7 @@ export class ConventionStore {
       const entity = conf.override[entity_name];
       let conv: ConventionStore;
       if (!entity) {
-        return [,Error(`${entity_name} was ${entity}, but should be of type string`)];
+        return [, Error(`${entity_name} was ${entity}, but should be of type string`)];
       }
       switch (typeof entity) {
         case 'string': {
@@ -124,7 +124,7 @@ export class ConventionStore {
     }
     let [conv, err] = conf.default ? ConventionStore.fromString(conf.default) : [new ConventionStore(),]; 
     if (err) {
-      return [,err];
+      return [, err];
     }
     conv!.children = children;
     return [conv];
@@ -133,6 +133,12 @@ export class ConventionStore {
   static fromObjectModel(entity: ObjectModelConvention): [ConventionStore?, Error?] {
     const conv = new ConventionStore();
     const children: Record<string, ConventionStore> = {};
+    if (entity.default) {
+      const err = conv._applyConventions(entity.default as string);
+      if (err) {
+        return [, err];
+      }
+    }
     switch (typeof entity.field) {
       case 'string': {
         const [conv, err] = ConventionStore.fromString(entity.field); 
@@ -165,24 +171,38 @@ export class ConventionStore {
       conv.disable = true;
       return [conv,];
     }
-    const conventions = entity.split(';').filter(Boolean).map(choice => choice.split('=').map(e => e.trim()) as [string, string]);
     const conv = new ConventionStore();
-    for (const [option, choice] of conventions) {
-      const [sel, err] = tryGetTableCaseConvention(choice);
-      if (err) {
-        return [, err];
-      }
-      switch(option) {
-        case 'table':    conv.tableCaseConvention    = sel; break;
-        case 'enum':     conv.enumCaseConvention     = sel; break;
-        case 'field':    conv.fieldCaseConvention    = sel; break;
-        case 'mapTable': conv.mapTableCaseConvention = sel; break;
-        case 'mapEnum':  conv.mapEnumCaseConvention  = sel; break;
-        case 'mapField': conv.mapFieldCaseConvention = sel; break;
-        default: return [, new Error(`unrecognized mapping option specified: ${option}, valid options are: ["table", "enum", "field", "mapTable", "mapEnum", "mapField"]`)];
-      }
+    const err = conv._applyConventions(entity);
+    if (err) {
+      return [,err];
     }
     return [conv,];
+  }
+
+  private _applyConventions(entity: string): Error|undefined {
+    const conventions = entity.split(';').filter(Boolean).map(choice => choice.split('=').map(e => e.trim()) as [string, string]);
+    for (const [option, choice] of conventions) {
+      if (option.startsWith('map') && choice.startsWith('!')) {
+        const key: 'mapTableCaseConvention' | 'mapFieldCaseConvention' | 'mapEnumCaseConvention' = (option + 'CaseConvention') as any;
+        const static_choice = choice.slice(1);
+        this[key] = () => static_choice;
+        continue;
+      }
+      const [sel, err] = tryGetTableCaseConvention(choice);
+      if (err) {
+        return err;
+      }
+      switch(option) {
+        case 'table':    this.tableCaseConvention    = sel; break;
+        case 'enum':     this.enumCaseConvention     = sel; break;
+        case 'field':    this.fieldCaseConvention    = sel; break;
+        case 'mapTable': this.mapTableCaseConvention = sel; break;
+        case 'mapEnum':  this.mapEnumCaseConvention  = sel; break;
+        case 'mapField': this.mapFieldCaseConvention = sel; break;
+        default: return new Error(`unrecognized mapping option specified: ${option}, valid options are: ["table", "enum", "field", "mapTable", "mapEnum", "mapField"]`);
+      }
+    }
+    return undefined;
   }
 
   static fromConventions(case_conv: CaseConventions) {
@@ -254,7 +274,7 @@ export class ConventionStore {
 
     const haystack = this.children ?? {};
     for (const key in haystack) {
-      const regex = new RegExp(key);
+      const regex = new RegExp('$' + key + '^');
       if (regex.test(next)) {
         return this.children![key]._recurse(k, rest);
       }

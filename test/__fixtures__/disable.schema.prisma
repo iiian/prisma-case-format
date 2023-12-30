@@ -10,6 +10,7 @@ model partially_maintained {
 
   maintained_property String
   unmaintained_property String
+  divergent_convention Int
 }
 
 model Pristine {
@@ -18,3 +19,19 @@ model Pristine {
   convert_this_pls DateTime
 }
 
+model amazing_model {
+  id Int @id
+  fuzz String
+}
+
+enum Taxis {
+  Yellow
+  Uber  
+}
+
+enum Taxes {
+  TaxCode1
+  TaxCode2
+
+  @@map("tax_codes")
+}

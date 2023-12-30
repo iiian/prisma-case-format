@@ -5,3 +5,12 @@ override:
     field:
       maintained_property: 'field=pascal'
       unmaintained_property: 'disable'
+      divergent_convention: 'mapField=!SeeItsACompletelyDifferentName'
+  AmazingModel:
+      default: 'table=pascal; mapTable=!Amaze_o'
+      field:
+        fuzz: 'mapField=!fizz_buzz'
+  taxis:
+    default:  'mapTable=!Cabs'
+  taxes:
+    default: 'mapTable=!tax_codes'
