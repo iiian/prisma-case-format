@@ -44,15 +44,19 @@ Options:
 -------------------------
 Supported case conventions: ["pascal", "camel", "snake"].
 Additionally, append ',plural' after any case-convention selection to mark case convention as pluralized.
-For instance:
+> For instance:
   --map-table-case=snake,plural
 
 will append `@@map("users")` to `model User`.
 Append ',singular' after any case-convention selection to mark case convention as singularized.
-For instance, 
+> For instance, 
   --map-table-case=snake,singular
 
 will append `@@map("user")` to `model Users`
+
+Deviant case conventions altogether:
+> If one or more of your models or fields needs to opt out of case conventions, either to be a fixed name or to disable it,
+use the `.prisma-case-format` file and read the documentation on "deviant name mappings".
 ```
 
 ## Example
@@ -223,6 +227,44 @@ model mYTaBlE {
 ```
 
 The other tables surrounding `mYTaBlE` will remain managed.
+
+#### Deviant name mappings
+
+In some cases, some users will want to let certain model or field names deviate out of using case-conventions. Primarily, this is useful if you're
+inheriting ill-named tables in an at least partialy database-first workflow. 
+Overriding case-convention use on a specific target name can be achieved in a `.prisma-case-format` file by using the syntax `map(Table|Field|Enum)=!<name>`,
+where `<name>` is your precise **case-sensitive** name that you want to map.
+
+##### Example
+
+```yaml
+default: ...
+override:
+  MyAmazingModel:
+    default: 'mapTable=!Amaze_o'
+    field:
+      fuzz: 'mapField=!fizz_buzz'
+  MySuperDuperEnum:
+    default: 'mapTable=!myenum'
+```
+
+Results in:
+
+```prisma
+model MyAmazingModel {
+  id Int @id
+  fuzz String @map("fizz_buzz")
+
+  @@map("Amaze_o")
+}
+
+enum MySuperDuperEnum {
+  Opt1
+  Opt2
+
+  @@map("myenum")
+}
+```
 
 #### Property: `uses_next_auth?: boolean`
 

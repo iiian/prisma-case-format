@@ -432,7 +432,7 @@ test('skip enum name mapping when enum name is equal to map', () => {
   expect(result?.includes('@@map("post_type")')).toBeFalsy();
 });
 
-test('if the entity is marked disabled, formatting is not applied', async () => {
+test('if the entity is marked disabled, or is marked with !, formatting is applied specially', async () => {
   const file_contents = getFixture('disable');
   const cfg_file = getTestFile('disable.prisma-case-format');
   const [store, store_err] = ConventionStore.fromConfStr(cfg_file);
