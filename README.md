@@ -191,7 +191,7 @@ Results in:
 model my_table {
   id                String @id
   FooFieldOnMyTable Integer
-  my_prefix_prop_a  Json
+  my_prefix_prop_a  Json       @map("MyPrefixPropA")
 
   @@map("myTable")
 }
