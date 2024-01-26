@@ -476,3 +476,14 @@ test('issue2', async () => {
   const result = await formatSchema({ schema: schema! });
   expect(result).toMatchSnapshot();
 });
+
+test('disable2', async () => {
+  const file_contents = getFixture('disable2');
+  const cfg_file = getTestFile('disable2.prisma-case-format');
+  const [store, store_err] = ConventionStore.fromConfStr(cfg_file);
+  expect(store_err).toBeFalsy();
+  const [schema, err] = ConventionTransformer.migrateCaseConventions(file_contents, store!);
+  expect(err).toBeFalsy();
+  const result = await formatSchema({ schema: schema! });
+  expect(result).toMatchSnapshot();
+});

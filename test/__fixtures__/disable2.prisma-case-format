@@ -1,0 +1,8 @@
+default: 'field=camel; table=pascal; enum=pascal; pluralize=true'
+override:
+  Model:
+    field:
+      passwordsSingular: 'mapField=snake,singular'
+      requestsSingular: 'mapField=!requests_singular'
+      columnsSingular: 'mapField=snake; pluralize=disable'
+      plurals: 'mapField=snake,singular'

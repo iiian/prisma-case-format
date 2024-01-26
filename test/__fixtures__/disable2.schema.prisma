@@ -1,0 +1,8 @@
+model Model {
+  id                String   @id @default(cuid())
+  passwordsSingular String[]
+  requestsSingular  String[]
+  columnsSingular   String[]
+  pluralsPlural     String[]
+  plural            String[]
+}
