@@ -1,5 +1,16 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`disable2 1`] = `
+"model Model {
+  id                String   @id @default(cuid())
+  passwordsSingular String[] @map("passwords_singular")
+  requestsSingulars String[] @map("requests_singular")
+  columnsSingular   String[]
+  pluralsPlurals    String[] @map("pluralsPlural")
+}
+"
+`;
+
 exports[`if next-auth is marked as in use, those models should be managed separately/consistently 1`] = `
 "model MyModel {
   id        String @id @default(uuid())

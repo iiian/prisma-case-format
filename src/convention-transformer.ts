@@ -227,7 +227,7 @@ export class ConventionTransformer {
           }
           let conv_field_name = store.field(context!, field)(field);
           const db_field_name = store.mapField?.(context!, conv_field_name)?.(conv_field_name) ?? og_db_field_name ?? field;
-          if (store.isPlural() && is_array_or_nullable.startsWith('[]')) {
+          if (store.isPlural(context!, field) && is_array_or_nullable.startsWith('[]')) {
             conv_field_name = plural(conv_field_name);
           }
           let map_anno_fragment = '';

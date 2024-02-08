@@ -17,6 +17,11 @@ export function tryGetTableCaseConvention(raw_type: string): [CaseChange?, Error
     case 'snake':
     kase = snakeCase;
     break;
+    case 'false':
+    case 'true':
+    case 'disable':
+    kase = x => x;
+    break;
     default: return [, new Error('unsupported case convention: ' + type)];
   }
 
@@ -199,7 +204,14 @@ export class ConventionStore {
         case 'mapTable': this.mapTableCaseConvention = sel; break;
         case 'mapEnum':  this.mapEnumCaseConvention  = sel; break;
         case 'mapField': this.mapFieldCaseConvention = sel; break;
-        default: return new Error(`unrecognized mapping option specified: ${option}, valid options are: ["table", "enum", "field", "mapTable", "mapEnum", "mapField"]`);
+        case 'pluralize': this.pluralize = (['disable', 'false'].includes(choice)) ? false : true; break;
+        default: return new Error(`unrecognized mapping option specified: ${option}, valid options are: ["table", "enum", "field", "mapTable", "mapEnum", "mapField", "pluralize"]`);
+      }
+      if (choice.includes('singular')) {
+        this.pluralize = false;
+      }
+      if (choice.includes('plural')) {
+        this.pluralize = true;
       }
     }
     return undefined;
