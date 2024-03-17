@@ -15,8 +15,8 @@ function getFixture(relative_path: string) {
   return readFileSync(join(FIXTURES_DIR, relative_path + PRISMA_SUFFIX), 'utf-8');
 }
 
-function getTestFile(relative_path: string) {
-  return readFileSync(join(FIXTURES_DIR, relative_path), 'utf-8');
+function getTestFilePath(relative_path: string) {
+  return join(FIXTURES_DIR, relative_path);
 }
 
 test('the readme demo should work', () => {
@@ -434,8 +434,8 @@ test('skip enum name mapping when enum name is equal to map', () => {
 
 test('if the entity is marked disabled, or is marked with !, formatting is applied specially', async () => {
   const file_contents = getFixture('disable');
-  const cfg_file = getTestFile('disable.prisma-case-format');
-  const [store, store_err] = ConventionStore.fromConfStr(cfg_file);
+  const cfg_file_path = getTestFilePath('disable.prisma-case-format');
+  const [store, store_err] = ConventionStore.fromFile(cfg_file_path);
   expect(store_err).toBeFalsy();
   const [schema, err] = ConventionTransformer.migrateCaseConventions(file_contents, store!);
   expect(err).toBeFalsy();
@@ -479,8 +479,8 @@ test('issue2', async () => {
 
 test('disable2', async () => {
   const file_contents = getFixture('disable2');
-  const cfg_file = getTestFile('disable2.prisma-case-format');
-  const [store, store_err] = ConventionStore.fromConfStr(cfg_file);
+  const cfg_file_path = getTestFilePath('disable2.prisma-case-format');
+  const [store, store_err] = ConventionStore.fromFile(cfg_file_path);
   expect(store_err).toBeFalsy();
   const [schema, err] = ConventionTransformer.migrateCaseConventions(file_contents, store!);
   expect(err).toBeFalsy();
