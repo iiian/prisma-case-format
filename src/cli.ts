@@ -47,7 +47,7 @@ async function run() {
     process.exit(1);
   }
 
-  const [conv, conv_err] = ConventionStore.fromFile(resolve(options.configFile));
+  const [conv, conv_err] = ConventionStore.fromFile(resolve(options.configFile), options.usesNextAuth);
   if (conv_err) {
     console.error(chalk.red("Encountered an error while trying to read provided config file at path " + options.convFile));
     console.error(chalk.red(conv_err.message));

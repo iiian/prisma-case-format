@@ -84,18 +84,16 @@ export class ConventionStore {
   public static fromFile(path: string, usesNextAuth?: boolean): [ConventionStore?, Error?] {
     if (!existsSync(path)) {
       if (path === resolve(DEFAULT_PRISMA_CASE_FORMAT_FILE_LOCATION)) { 
-        return ConventionStore.fromConf({});
+        return ConventionStore.fromConf({
+          uses_next_auth: usesNextAuth
+        });
       }
       return [, new Error('file does not exist:  ' + path)]
     }
-    return ConventionStore.fromConfStr(readFileSync(path).toString());
+    const content = <ConventionFile>jsyaml.load(readFileSync(path).toString());
+    return ConventionStore.fromConf({ ...content, uses_next_auth: usesNextAuth ?? false });
   }
 
-  public static fromConfStr(conf: string): [ConventionStore?, Error?] {
-    let content = <ConventionFile>jsyaml.load(conf);
-    return ConventionStore.fromConf(content);
-  }
-  
   public static fromConf(conf: ConventionFile): [ConventionStore?, Error?] {
     if (conf.uses_next_auth) {
       conf = imbueWithNextAuth(conf);
