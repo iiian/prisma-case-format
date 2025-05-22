@@ -1,4 +1,4 @@
-import { camelCase, pascalCase, snakeCase } from 'change-case';
+import { camelCase, pascalCase, snakeCase, constantCase } from 'change-case';
 import { CaseChange, asPluralized, asSingularized } from './caseConventions';
 import { existsSync, readFileSync } from 'fs';
 import * as jsyaml from 'js-yaml';
@@ -16,6 +16,9 @@ export function tryGetTableCaseConvention(raw_type: string): [CaseChange?, Error
     break;
     case 'snake':
     kase = snakeCase;
+    break;
+    case 'constant':
+    kase = constantCase;
     break;
     case 'false':
     case 'true':
@@ -38,7 +41,7 @@ export function tryGetTableCaseConvention(raw_type: string): [CaseChange?, Error
 }
 
 export const SUPPORTED_CASE_CONVENTIONS_MESSAGE = `-------------------------
-Supported case conventions: ["pascal", "camel", "snake"].
+Supported case conventions: ["pascal", "camel", "snake", "constant"].
 Additionally, append ',plural' after any case-convention selection to mark case convention as pluralized.
 For instance:
   --map-table-case=snake,plural
@@ -283,6 +286,9 @@ export class ConventionStore {
     if (this.children?.hasOwnProperty(camelCase(next))) {
       return this.children[camelCase(next)]._recurse(k, rest);        
     }
+    if (this.children?.hasOwnProperty(constantCase(next))) {
+      return this.children[constantCase(next)]._recurse(k, rest);        
+    }
 
     const haystack = this.children ?? {};
     for (const key in haystack) {
@@ -298,6 +304,9 @@ export class ConventionStore {
       }
       if (regex.test(camelCase(next))) {
         return this.children![camelCase(next)]._recurse(k, rest);
+      }
+      if (regex.test(constantCase(next))) {
+        return this.children![constantCase(next)]._recurse(k, rest);
       }
     }
     return undefined;

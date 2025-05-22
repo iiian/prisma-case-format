@@ -46,7 +46,7 @@ Options:
   -V, --version                    hint: you have v2.1.0
   -h, --help                       display help for command
 -------------------------
-Supported case conventions: ["pascal", "camel", "snake"].
+Supported case conventions: ["pascal", "camel", "snake", "constant"].
 Additionally, append ',plural' after any case-convention selection to mark case convention as pluralized.
 > For instance:
   --map-table-case=snake,plural

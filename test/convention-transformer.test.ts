@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 
 import { join } from 'path';
 
-import { camelCase, pascalCase, snakeCase } from 'change-case';
+import { camelCase, pascalCase, snakeCase, constantCase } from 'change-case';
 import { CaseChange, ConventionTransformer } from '../src/convention-transformer';
 import { formatSchema } from '@prisma/internals';
 
@@ -109,7 +109,7 @@ test('it can account for comments on model lines', () => {
 });
 
 const supported_case_conventions: { caseConvention: CaseChange }[] = [
-  { caseConvention: snakeCase }, { caseConvention: camelCase }, { caseConvention: pascalCase }];
+  { caseConvention: snakeCase }, { caseConvention: camelCase }, { caseConvention: pascalCase }, { caseConvention: constantCase }];
 /**
  * !!Warning!! Jest snapshots are _almost_ an anti-pattern. This is because if
  * you rename the test case, and introduce a bug, the bug is now valid to Jest.
@@ -314,6 +314,20 @@ describe('must properly bring enum name to', () => {
     const [result, err] = ConventionTransformer.migrateCaseConventions(file_contents, store);
     expect(err).toBeFalsy();
     expect(result?.includes('enum post_type')).toBeTruthy();
+  });
+
+  test('CONSTANT_CASE', () => {
+    const file_contents = getFixture('enum');
+
+    const store = ConventionStore.fromConventions({
+      ...defaultConventions(),
+      tableCaseConvention: pascalCase,
+      fieldCaseConvention: camelCase,
+      enumCaseConvention: constantCase,
+    });
+    const [result, err] = ConventionTransformer.migrateCaseConventions(file_contents, store);
+    expect(err).toBeFalsy();
+    expect(result?.includes('enum POST_TYPE')).toBeTruthy();
   });
 });
 
