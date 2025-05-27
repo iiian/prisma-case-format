@@ -3,7 +3,7 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { Command, OptionValues } from 'commander';
 import chalk from 'chalk';
-import { formatSchema } from '@prisma/internals';
+import { formatSchema } from './schema';
 import { ConventionTransformer } from './convention-transformer';
 import { ConventionStore, DEFAULT_PRISMA_CASE_FORMAT_FILE_LOCATION, SUPPORTED_CASE_CONVENTIONS_MESSAGE, tryGetTableCaseConvention } from './convention-store';
 import { resolve } from 'path';
@@ -132,13 +132,13 @@ async function run() {
     process.exit(1);
   }
 
-  const new_schema = await formatSchema({ schema: schema! });
+  const new_schema = await formatSchema(schema!);
 
   if (options.dryRun) {
     console.log(new_schema);
     process.exit(0);
   }
-  writeFileSync(options.file, Buffer.from(new_schema), { encoding: 'utf8' });
+  writeFileSync(options.file, new_schema, { encoding: 'utf8' });
   console.log(chalk.blue('✨ Done.'));
 }
 

@@ -5,8 +5,9 @@ exports[`disable2 1`] = `
   id                String   @id @default(cuid())
   passwordsSingular String[] @map("passwords_singular")
   requestsSingulars String[] @map("requests_singular")
-  columnsSingular   String[]
+  columnsSingular   String[] @map("columns_singular")
   pluralsPlurals    String[] @map("pluralsPlural")
+  plurals           String[] @map("plural")
 }
 "
 `;
