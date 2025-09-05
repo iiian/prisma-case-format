@@ -132,7 +132,8 @@ async function run() {
     process.exit(1);
   }
 
-  const new_schema = await formatSchema({ schema: schema! });
+  const formatted_schemas = await formatSchema({ schemas: [['schema.prisma', schema!]] });
+  const new_schema = formatted_schemas[0][1]; // Extract the formatted content from the first schema tuple
 
   if (options.dryRun) {
     console.log(new_schema);

@@ -69,7 +69,8 @@ test('it can map enum column to enum definition', async () => {
   const file_contents = getFixture('enum');
   const [schema, err] = ConventionTransformer.migrateCaseConventions(file_contents, store);
   expect(err).toBeFalsy();
-  const new_schema = await formatSchema({ schema: schema! });
+  const formatted_schemas = await formatSchema({ schemas: [['schema.prisma', schema!]] });
+  const new_schema = formatted_schemas[0][1];
   expect(new_schema).toMatchSnapshot();
 });
 
@@ -128,19 +129,22 @@ test.each(supported_case_conventions)('it can enforce a specified case conventio
 
   let file_contents = getFixture('idempotency');
   let [schema, err] = ConventionTransformer.migrateCaseConventions(file_contents, store);
-  let new_schema = await formatSchema({ schema: schema! });
+  let formatted_schemas = await formatSchema({ schemas: [['schema.prisma', schema!]] });
+  let new_schema = formatted_schemas[0][1];
   expect(err).toBeFalsy();
   expect(new_schema).toMatchSnapshot(caseConvention.name);
 
   file_contents = getFixture('cascading-deletion-and-fk');
   [schema, err] = ConventionTransformer.migrateCaseConventions(file_contents, store);
-  new_schema = await formatSchema({ schema: schema! });
+  formatted_schemas = await formatSchema({ schemas: [['schema.prisma', schema!]] });
+  new_schema = formatted_schemas[0][1];
   expect(err).toBeFalsy();
   expect(new_schema).toMatchSnapshot(caseConvention.name);
 
   file_contents = getFixture('pluralize-fields');
   [schema, err] = ConventionTransformer.migrateCaseConventions(file_contents, store);
-  new_schema = await formatSchema({ schema: schema! });
+  formatted_schemas = await formatSchema({ schemas: [['schema.prisma', schema!]] });
+  new_schema = formatted_schemas[0][1];
   expect(err).toBeFalsy();
   expect(new_schema).toMatchSnapshot(caseConvention.name);
 });
@@ -163,19 +167,22 @@ test.each(supported_case_conventions)('it can enforce a specified case conventio
 
   let file_contents = getFixture('idempotency');
   let [schema, err] = ConventionTransformer.migrateCaseConventions(file_contents, store);
-  let new_schema = await formatSchema({ schema: schema! });
+  let formatted_schemas = await formatSchema({ schemas: [['schema.prisma', schema!]] });
+  let new_schema = formatted_schemas[0][1];
   expect(err).toBeFalsy();
   expect(new_schema).toMatchSnapshot(caseConvention.name);
 
   file_contents = getFixture('cascading-deletion-and-fk');
   [schema, err] = ConventionTransformer.migrateCaseConventions(file_contents, store);
-  new_schema = await formatSchema({ schema: schema! });
+  formatted_schemas = await formatSchema({ schemas: [['schema.prisma', schema!]] });
+  new_schema = formatted_schemas[0][1];
   expect(err).toBeFalsy();
   expect(new_schema).toMatchSnapshot(caseConvention.name);
 
   file_contents = getFixture('pluralize-fields');
   [schema, err] = ConventionTransformer.migrateCaseConventions(file_contents, store);
-  new_schema = await formatSchema({ schema: schema! });
+  formatted_schemas = await formatSchema({ schemas: [['schema.prisma', schema!]] });
+  new_schema = formatted_schemas[0][1];
   expect(err).toBeFalsy();
   expect(new_schema).toMatchSnapshot(caseConvention.name);
 });
@@ -190,7 +197,8 @@ test('it can enforce a specified case convention on views', async () => {
   const file_contents = getFixture('views');
   let [schema, err] = ConventionTransformer.migrateCaseConventions(file_contents, store);
   expect(err).toBeFalsy();
-  let new_schema = await formatSchema({ schema: schema! });
+  let formatted_schemas = await formatSchema({ schemas: [['schema.prisma', schema!]] });
+  let new_schema = formatted_schemas[0][1];
   expect(new_schema).toMatchSnapshot();
 });
 
@@ -269,7 +277,8 @@ test('it can rename enum in the database', async () => {
   });
   const [schema, err] = ConventionTransformer.migrateCaseConventions(file_contents, store);
   expect(err).toBeFalsy();
-  const result = await formatSchema({ schema: schema! });
+  const formatted_schemas = await formatSchema({ schemas: [['schema.prisma', schema!]] });
+  const result = formatted_schemas[0][1];
   expect(result).toMatchSnapshot();
 });
 
@@ -439,7 +448,8 @@ test('if the entity is marked disabled, or is marked with !, formatting is appli
   expect(store_err).toBeFalsy();
   const [schema, err] = ConventionTransformer.migrateCaseConventions(file_contents, store!);
   expect(err).toBeFalsy();
-  const result = await  formatSchema({ schema: schema! });
+  const formatted_schemas = await formatSchema({ schemas: [['schema.prisma', schema!]] });
+  const result = formatted_schemas[0][1];
   expect(result).toMatchSnapshot();
 });
 
@@ -448,7 +458,8 @@ test('if next-auth is marked as in use, those models should be managed separatel
   const [store, store_err] = ConventionStore.fromConf({ uses_next_auth: true });
   expect(store_err).toBeFalsy();
   const [schema, err] = ConventionTransformer.migrateCaseConventions(file_contents, store!);
-  const result = await formatSchema({ schema: schema! });
+  const formatted_schemas = await formatSchema({ schemas: [['schema.prisma', schema!]] });
+  const result = formatted_schemas[0][1];
   expect(err).toBeFalsy();
   expect(result).toMatchSnapshot();
 });
@@ -461,7 +472,8 @@ test('issue', async () => {
   expect(store_err).toBeFalsy();
   const [schema, err] = ConventionTransformer.migrateCaseConventions(file_contents, store!);
   expect(err).toBeFalsy();
-  const result = await formatSchema({ schema: schema! });
+  const formatted_schemas = await formatSchema({ schemas: [['schema.prisma', schema!]] });
+  const result = formatted_schemas[0][1];
   expect(result).toMatchSnapshot();
 });
 
@@ -473,7 +485,8 @@ test('issue2', async () => {
   expect(store_err).toBeFalsy();
   const [schema, err] = ConventionTransformer.migrateCaseConventions(file_contents, store!);
   expect(err).toBeFalsy();
-  const result = await formatSchema({ schema: schema! });
+  const formatted_schemas = await formatSchema({ schemas: [['schema.prisma', schema!]] });
+  const result = formatted_schemas[0][1];
   expect(result).toMatchSnapshot();
 });
 
@@ -484,6 +497,7 @@ test('disable2', async () => {
   expect(store_err).toBeFalsy();
   const [schema, err] = ConventionTransformer.migrateCaseConventions(file_contents, store!);
   expect(err).toBeFalsy();
-  const result = await formatSchema({ schema: schema! });
+  const formatted_schemas = await formatSchema({ schemas: [['schema.prisma', schema!]] });
+  const result = formatted_schemas[0][1];
   expect(result).toMatchSnapshot();
 });
