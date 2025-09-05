@@ -7,3 +7,4 @@ pnpm-lock.*
 package-lock.*
 schema.prisma
 .prisma-schema-format
+.idea

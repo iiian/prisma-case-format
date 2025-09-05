@@ -138,7 +138,7 @@ async function run() {
     console.log(new_schema);
     process.exit(0);
   }
-  writeFileSync(options.file, Buffer.from(new_schema), { encoding: 'utf8' });
+  writeFileSync(options.file, new_schema, { encoding: 'utf8' });
   console.log(chalk.blue('✨ Done.'));
 }
 
