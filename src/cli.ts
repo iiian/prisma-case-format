@@ -132,13 +132,14 @@ async function run() {
     process.exit(1);
   }
 
-  const new_schema = await formatSchema({ schema: schema! });
+  const formatted_schemas = await formatSchema({ schemas: [['schema.prisma', schema!]] });
+  const new_schema = formatted_schemas[0][1]; // Extract the formatted content from the first schema tuple
 
   if (options.dryRun) {
     console.log(new_schema);
     process.exit(0);
   }
-  writeFileSync(options.file, Buffer.from(new_schema), { encoding: 'utf8' });
+  writeFileSync(options.file, new_schema, { encoding: 'utf8' });
   console.log(chalk.blue('✨ Done.'));
 }
 
